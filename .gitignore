@@ -1,0 +1,61 @@
+# draft file
+**/*_ign**
+
+# vscode config
+**/.vscode
+
+# any test files
+**/.test
+
+# python
+**/*__pycache__/
+# python bytecode (usually neutral network models)
+**/*.npy
+
+# wsl and any other explorer metadata
+**/*:Zone.Identifier
+**/.svn
+**/.hg
+**/.DS_Store
+**/Thumbs.db
+
+# agda
+**/*.agdai
+
+# tex
+**/*.nav
+**/*.snm
+**/*.bbl
+**/*.synctex.gz
+**/*.vrb
+
+# C/C++
+**/*.o
+**/*.so
+**/*.a
+
+# Rocq
+**/*.vo
+**/*.cache
+**/*.vo
+**/*.vok
+**/*.vos
+**/*.aux
+**/*.glob
+
+# ai models
+**/model/*
+
+# ignore large textbook or materials
+/Intro to Artificial Intelligence/material
+/Intro to Computer Systems/assets/textbook.pdf
+/Intro to Software Foundations/lf
+/Intro to Software Foundations/plf
+
+# textbook presentation files
+/Software Foundations/*/common/
+/Software Foundations/*/*.html
+
+# submodules from some labs
+**/pybind11/
+

@@ -1,0 +1,5 @@
+BUFSIZE = 0x38
+touch1 at 0x401cb7
+
+--- PAD ---
+b7 1c 40 00 00 00 00 00

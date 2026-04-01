@@ -1,0 +1,41 @@
+﻿# 20120712
+
+# As you've got familiar with Y86 after writting your first y86 code
+# (bubble.ys), this code is left blank for you :)
+
+	.pos 0
+	irmovq	stack, %rsp
+	call main
+	halt
+
+    .align 8
+ele1:
+    .quad 0x00d
+    .quad ele2
+ele2:
+    .quad 0x0e0
+    .quad ele3
+ele3:
+    .quad 0xf00
+    .quad 0
+
+sum:
+    xorq %rax, %rax
+    andq %rdi, %rdi
+    je done
+    pushq %rbx
+    mrmovq (%rdi), %rbx
+    mrmovq 8(%rdi), %rdi
+    call sum
+    addq %rbx, %rax
+    popq %rbx
+done:
+    ret
+
+main:
+	irmovq ele1, %rdi
+	call sum
+	ret
+
+	.pos 0x200
+stack:

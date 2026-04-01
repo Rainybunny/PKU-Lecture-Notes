@@ -1,0 +1,128 @@
+﻿################################################################################
+# ncopy.ys - Copy a src block of len words to dst.
+# Return the number of positive words (>0) contained in src.
+#
+# Include your name and ID here.
+#
+# 20120712
+#
+# Describe how and why you modified the baseline code.
+#
+# 4-循环展开. 注意处理 1) 对循环变量 -4 和 -1 的位运算控制, 可以节省一些运算;
+# 2) 使用 cmov 代替跳转;
+# 3) 注意在 len 小时, 失败预测会严重影响 CPE, 所以需要安排分支的顺序, 让 len 小时的尽可能多的预测成立.
+#
+################################################################################
+# Do not modify this portion
+# Function prologue.
+# %rdi = src, %rsi = dst, %rdx = len
+ncopy:
+################################################################################
+# You can modify this portion
+
+    # xorq %r10, %r10
+    # xorq %rax, %rax
+    isubq $6, %rdx
+    jl end_giant
+giant:
+    mrmovq (%rdi), %r8
+    mrmovq 8(%rdi), %r9
+
+    andq %r8, %r8
+    jle test_g1
+    iaddq $1, %rax
+test_g1:
+
+    rmmovq %r8, (%rsi)
+    rmmovq %r9, 8(%rsi)
+
+    andq %r9, %r9
+    jle test_g2
+    iaddq $1, %rax
+test_g2:
+
+    mrmovq 16(%rdi), %r8
+    mrmovq 24(%rdi), %r9
+
+    andq %r8, %r8
+    jle test_g3
+    iaddq $1, %rax
+test_g3:
+
+    rmmovq %r8, 16(%rsi)
+    rmmovq %r9, 24(%rsi)
+
+    andq %r9, %r9
+    jle test_g4
+    iaddq $1, %rax
+test_g4:
+
+    mrmovq 32(%rdi), %r8
+    mrmovq 40(%rdi), %r9
+
+    andq %r8, %r8
+    jle test_g5
+    iaddq $1, %rax
+test_g5:
+
+    rmmovq %r8, 32(%rsi)
+    rmmovq %r9, 40(%rsi)
+
+    andq %r9, %r9
+    jle test_g6
+    iaddq $1, %rax
+test_g6:
+
+    iaddq $48, %rdi
+    iaddq $48, %rsi
+    isubq $6, %rdx
+    jge giant
+end_giant:
+    iaddq $6, %rdx
+    jne baby
+    ret
+baby:
+    mrmovq (%rdi), %r8
+    irmovq $1, %rcx
+    andq %r8, %r8
+    cmovle %r10, %rcx
+    addq %rcx, %rax
+    rmmovq %r8, (%rsi)
+    isubq $1, %rdx
+    je done
+    mrmovq 8(%rdi), %r8
+    irmovq $1, %rcx
+    andq %r8, %r8
+    cmovle %r10, %rcx
+    addq %rcx, %rax
+    rmmovq %r8, 8(%rsi)
+    isubq $1, %rdx
+    je done
+    mrmovq 16(%rdi), %r8
+    irmovq $1, %rcx
+    andq %r8, %r8
+    cmovle %r10, %rcx
+    addq %rcx, %rax
+    rmmovq %r8, 16(%rsi)
+    isubq $1, %rdx
+    je done
+    mrmovq 24(%rdi), %r8
+    irmovq $1, %rcx
+    andq %r8, %r8
+    cmovle %r10, %rcx
+    addq %rcx, %rax
+    rmmovq %r8, 24(%rsi)
+    isubq $1, %rdx
+    je done
+    mrmovq 32(%rdi), %r8
+    irmovq $1, %rcx
+    andq %r8, %r8
+    cmovle %r10, %rcx
+    addq %rcx, %rax
+    rmmovq %r8, 32(%rsi)
+done:
+    ret
+
+# In grader, we will add a "trap: jmp trap" here, which traps your program in an
+# infinite loop. Thus your function should always return instead of falling
+# through till the end of the source code :)

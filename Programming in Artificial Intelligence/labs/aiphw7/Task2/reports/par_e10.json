@@ -1,0 +1,118 @@
+{
+  "script": "cifar-par.py",
+  "timestamp": "2026-01-15T15:43:04",
+  "torch": "2.7.0+cu118",
+  "cuda_available": true,
+  "device": "cuda:0",
+  "gpu_count": 1,
+  "parallel_mode": "DataParallel",
+  "batch_size": 128,
+  "epochs": 10,
+  "num_workers": 2,
+  "optimizer": {
+    "name": "SGD",
+    "lr": 0.025,
+    "momentum": 0.9,
+    "weight_decay": 0.001
+  },
+  "train": {
+    "total_time_sec": 85.9441785880008,
+    "epochs": [
+      {
+        "epoch": 0,
+        "loss": 1.799860256407267,
+        "acc": 33.172,
+        "time_sec": 9.258207503000449,
+        "images": 50000,
+        "images_per_sec": 5400.613453932172
+      },
+      {
+        "epoch": 1,
+        "loss": 1.382966754076731,
+        "acc": 49.808,
+        "time_sec": 8.536570866999682,
+        "images": 50000,
+        "images_per_sec": 5857.152805148951
+      },
+      {
+        "epoch": 2,
+        "loss": 1.2219071780019404,
+        "acc": 56.348,
+        "time_sec": 8.809558373999607,
+        "images": 50000,
+        "images_per_sec": 5675.653407050371
+      },
+      {
+        "epoch": 3,
+        "loss": 1.1288655025269978,
+        "acc": 60.094,
+        "time_sec": 8.602823204000742,
+        "images": 50000,
+        "images_per_sec": 5812.045512773935
+      },
+      {
+        "epoch": 4,
+        "loss": 1.0455277216099108,
+        "acc": 63.222,
+        "time_sec": 8.332619969998632,
+        "images": 50000,
+        "images_per_sec": 6000.513665572607
+      },
+      {
+        "epoch": 5,
+        "loss": 0.9907968327822283,
+        "acc": 65.102,
+        "time_sec": 8.434286103998602,
+        "images": 50000,
+        "images_per_sec": 5928.184007926356
+      },
+      {
+        "epoch": 6,
+        "loss": 0.9359545587273814,
+        "acc": 66.958,
+        "time_sec": 8.574476166999375,
+        "images": 50000,
+        "images_per_sec": 5831.26001241163
+      },
+      {
+        "epoch": 7,
+        "loss": 0.9031093632778548,
+        "acc": 68.316,
+        "time_sec": 8.425537622002594,
+        "images": 50000,
+        "images_per_sec": 5934.339414665854
+      },
+      {
+        "epoch": 8,
+        "loss": 0.8720231946472012,
+        "acc": 69.064,
+        "time_sec": 8.435408074001316,
+        "images": 50000,
+        "images_per_sec": 5927.39551677464
+      },
+      {
+        "epoch": 9,
+        "loss": 0.8353239526529141,
+        "acc": 70.83,
+        "time_sec": 8.527619750002486,
+        "images": 50000,
+        "images_per_sec": 5863.300834911808
+      }
+    ]
+  },
+  "test": {
+    "overall_acc": 64.0,
+    "per_class_acc": {
+      "0": 67.1,
+      "1": 82.5,
+      "2": 34.9,
+      "3": 44.8,
+      "4": 58.4,
+      "5": 57.0,
+      "6": 69.6,
+      "7": 73.3,
+      "8": 73.3,
+      "9": 79.1
+    }
+  }
+}

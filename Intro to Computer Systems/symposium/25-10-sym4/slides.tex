@@ -1,0 +1,486 @@
+\documentclass{ctexbeamer}
+\usepackage[UTF8]{ctex} % 添加此行确保 listings 支持 UTF8
+\usepackage{graphicx}
+\usepackage{multicol}
+
+\usefonttheme{serif}
+\usefonttheme{professionalfonts}
+\definecolor{tyblue}{RGB}{102,204,255}
+\usepackage{amsmath}
+\usepackage{mathtools}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usetikzlibrary{positioning, shapes.geometric}
+
+\usepackage{listings}
+\usepackage{xcolor}
+
+% 自定义代码块样式
+\lstset{
+    numbers=left,
+    numberstyle=\tiny,
+    basicstyle=\ttfamily\small, % 推荐加 \small
+    keywordstyle=\color{blue!70},
+    commentstyle=\color{red!50!green!50!blue!50},
+    frame=shadowbox,
+    rulesepcolor=\color{red!20!green!20!blue!20},
+    escapeinside=``,
+    xleftmargin=2em, xrightmargin=2em, aboveskip=1em,
+    framexleftmargin=2em,
+    language=C,
+    extendedchars=true, % 支持扩展字符
+    inputencoding=utf8 % 明确指定编码
+} 
+\usetheme{Antibes}
+\usecolortheme{dolphin}
+
+% 自定义 x86-64 汇编语言以改进关键字高亮
+\lstdefinelanguage{x86_64}{
+  morekeywords={
+    mov,add,sub,and,or,xor,not,neg,cmp,test,
+    je,jne,jl,jle,jg,jge,jmp,call,ret,
+    shr,shl,sar,sal,lea,inc,dec,push,pop,pushq,movq,andl,
+    sete,setne,cmove,cmovne,cdqe,cqo,movl,movslq,testl,js,subl,addl,cmpl
+  },
+  sensitive=true,
+  morecomment=[l]{;},
+  morestring=[b]"
+}
+
+\begin{document}
+
+\title{回课: 控制流}
+\subtitle{机器级编程 II}
+\author{Rainybunny}
+\date{\today}
+\frame{\titlepage}
+
+\begin{frame}{目录}
+%   \begin{multicols}{2}
+    \tableofcontents[hideallsubsections]
+%   \end{multicols}
+\end{frame}
+
+\AtBeginSection[]{
+  \begin{frame} % [shrink=15]
+    % \begin{multicols}{2}
+      \tableofcontents[currentsection,hideallsubsections]
+    % \end{multicols}
+  \end{frame}
+}
+
+\section{C loops 与 goto loops 的互译}
+
+\subsection*{do-while loop}
+
+\begin{frame}[fragile]{do-while loop}
+  \begin{lstlisting}[language=C]
+  do {
+    count += x & 1;
+    x >>= 1;
+  } while (x);
+  \end{lstlisting}
+
+  $$
+    \Updownarrow
+  $$
+
+  \begin{lstlisting}[language=C]
+loop:
+  count += x & 1;
+  x >>= 1;
+  if (x) goto loop;
+  \end{lstlisting}
+\end{frame}
+
+\subsection*{while loop}
+
+\begin{frame}[fragile]{while loop}
+  \begin{lstlisting}[language=C]
+  while (x) {
+    count += x & 1;
+    x >>= 1;
+  }
+  \end{lstlisting}
+
+  $$
+    \Updownarrow
+  $$
+
+  \qquad 方案一: jump to middle.
+  \begin{lstlisting}[language=C]
+  goto check;
+loop:
+  count += x & 1;
+  x >>= 1;
+check:
+  if (x) goto loop;
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{while loop}
+  \begin{lstlisting}[language=C]
+  while (x) {
+    count += x & 1;
+    x >>= 1;
+  }
+  \end{lstlisting}
+
+  $$
+    \Updownarrow
+  $$
+
+  \qquad 方案二: guarded-do.
+  \begin{lstlisting}[language=C]
+  if (!x) goto finished;
+loop:
+  count += x & 1;
+  x >>= 1;
+  if (x) goto loop;
+finished: ;
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}{while loop}
+  \qquad 在不同优化级别下, \texttt{gcc} 对 \texttt{while} 循环的处理方式不完全相同. 在实验\footnote{https://godbolt.org/z/7KKMWs3Mz}中:
+  \begin{itemize}
+    \item 启用 \texttt{-Og} 选项, \texttt{while} 被处理为 jump-to-middle 方案;
+    \item 启用 \texttt{-O1} 选项, \texttt{while} 被处理为 guarded-do 方案.
+  \end{itemize}
+  相比 guarded-do, jump-to-middle 会多一次跳转 (第一次成功进入循环体之前会连续跳转两次), 有轻微性能劣势.
+\end{frame}
+
+\subsection*{for loop}
+
+\begin{frame}[fragile]{for loop}
+  \begin{lstlisting}[language=C]
+  for (int `{\color{red}\texttt{\small{i = 0}}}`; `{\color{green}\texttt{\small{x >> i}}}`; `{\color{cyan}\texttt{\small{++i}}}`) {
+    count += x >> i & 1;
+  }
+  \end{lstlisting}
+
+  $$
+    \Updownarrow
+  $$
+
+  \begin{lstlisting}[language=C]
+  int `{\color{red}\texttt{\small{i = 0}}}`;
+  if (!(x `\underline{\texttt{\small{>> i}}}`)) goto finished;
+loop:
+  count += x >> i & 1;
+  `{\color{cyan}\texttt{\small{++i;}}}`
+  if (`{\color{green}\texttt{\small{x >> i}}}`) goto loop;
+finished: ;
+  \end{lstlisting}
+\end{frame}
+
+\subsection*{多重循环}
+
+\begin{frame}[fragile, shrink=35]{多重循环}
+  \begin{lstlisting}[language=x86_64]
+  movl  $1000000000, 96(%rsp)
+  movl  $9, %esi
+  movl  $0, %eax
+  jmp .L4
+.L6:
+  subl  $1, %eax
+.L5:
+  movslq  %eax, %rdx
+  cmpl  %ecx, 96(%rsp,%rdx,4)
+  jle .L6
+  addl  $1, %eax
+  movslq  %eax, %rdx
+  movl  %ecx, 96(%rsp,%rdx,4)
+  movslq  %esi, %rdx
+  movl  %eax, 48(%rsp,%rdx,4)
+  subl  $1, %esi
+.L4:
+  testl  %esi, %esi
+  js .L12
+  movslq  %esi, %rdx
+  movl  (%rsp,%rdx,4), %ecx
+  jmp .L5
+.L12:
+  ; (omitted)
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile, shrink=30]{多重循环}
+  \begin{lstlisting}[language=x86_64]
+  movl  $1000000000, 96(%rsp) ; stk[0] = 1e9
+  movl  $9, %esi              ; i = 9
+  movl  $0, %eax              ; top = 0
+  `\color{red}jmp .L4`
+`\color{orange}.L6:`
+  subl  $1, %eax              ; --top
+`\color{cyan}.L5:`
+  movslq  %eax, %rdx
+  cmpl  %ecx, 96(%rsp,%rdx,4) ; x : stk[top]
+  `\color{orange}jle .L6`                      ; jump if stk[top] <= x
+  addl  $1, %eax              ; ++top
+  movslq  %eax, %rdx
+  movl  %ecx, 96(%rsp,%rdx,4) ; stk[top] = x
+  movslq  %esi, %rdx
+  movl  %eax, 48(%rsp,%rdx,4) ; lgis[i] = top (length of greedy LIS)
+  subl  $1, %esi              ; --i
+`\color{red}.L4:`
+  testl  %esi, %esi
+  js .L12                     ; NOT jump if i >= 0
+  movslq  %esi, %rdx
+  movl  (%rsp,%rdx,4), %ecx   ; x = ary[i]
+  `\color{cyan}jmp .L5`
+.L12:
+  ; (omitted)
+  \end{lstlisting}
+\end{frame}
+
+\section{switch 与跳转表}
+
+\subsection*{C 中的 jump table}
+
+\begin{frame}[fragile, shrink=40]{C 中的 jump table}
+  \begin{lstlisting}{language=C}
+switch (x) {
+  case 0:
+    x = 114;
+  case 1:
+    x += 514;
+    break;
+  case 3:
+  case 4:
+    x = 1919;
+    break;
+  default:
+    x = 810;
+}
+  \end{lstlisting}
+
+  $$
+    \Updownarrow
+  $$
+
+  \begin{lstlisting}[language=C]
+void bar(int& x) {
+  void* jmpt[] = { &&loc_0, &&loc_1, &&loc_def, &&loc_3_4, &&loc_3_4 };
+  if ((unsigned)x > 4) goto loc_def;
+  goto *jmpt[x];
+loc_0:
+  x = 114;
+loc_1:
+  x += 514;
+  goto done;
+loc_3_4:
+  x = 1919;
+loc_def:
+  x = 810;
+done:;
+}
+  \end{lstlisting}
+\end{frame}
+
+\subsection*{汇编中的 jump table}
+
+\begin{frame}[fragile, shrink=40]{汇编中的 jump table}
+  \begin{lstlisting}[language=x86_64]
+iterate_8per(int (*)(int), int, int):
+  movl    %esi, %eax
+  pushq   %r12
+  movl    %esi, %r12d
+  andl    $7, %eax
+  pushq   %rbp
+  pushq   %rbx
+  movq    %rdi, %rbx
+  movl    %edx, %edi
+  jmp     *.L21(,%rax,8)
+.L21:
+  .quad   .L19
+  .quad   .L27
+  .quad   .L26
+  .quad   .L25
+  .quad   .L24
+  .quad   .L23
+  .quad   .L22
+  .quad   .L20
+.L20:
+  call    *%rbx
+  movl    %eax, %edi
+.L22: ; two same lines
+.L23: ; two same lines
+.L24: ; two same lines
+.L25: ; two same lines
+.L26: ; two same lines
+.L27: ; two same lines
+  ; (omitted)
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile, shrink=40]{汇编中的 jump table}
+  \begin{lstlisting}[language=x86_64]
+iterate_8per(int (*)(int), int, int):
+  movl    %esi, %eax
+  pushq   %r12
+  movl    %esi, %r12d
+  andl    $7, %eax
+  pushq   %rbp
+  pushq   %rbx
+  movq    %rdi, %rbx
+  movl    %edx, %edi
+  `\color{red}jmp`     `\color{orange}*``\color{cyan}.L21`(,%rax,8)  ; switch here
+`\color{cyan}.L21`:                     ; jump table for switch
+  `\color{green}.quad   .L19`
+  `\color{green}.quad   .L27`
+  `\color{green}.quad   .L26`
+  `\color{green}.quad   .L25`
+  `\color{green}.quad   .L24`
+  `\color{green}.quad   .L23`
+  `\color{green}.quad   .L22`
+  `\color{green}.quad   .L20`            ; targets for different cases
+.L20:
+  call    *%rbx
+  movl    %eax, %edi
+.L22: ; two same lines
+.L23: ; two same lines
+.L24: ; two same lines
+.L25: ; two same lines
+.L26: ; two same lines
+.L27: ; two same lines
+  ; (omitted)
+  \end{lstlisting}
+\end{frame}
+
+\subsection*{引入 jump table 的优劣}
+
+\begin{frame}{引入 jump table 的优劣}
+  \begin{itemize}
+    \item 优点: 
+      \begin{itemize}
+        \item 执行跳转指令的次数从 $\mathcal O(n)$ 降为 $\mathcal O(1)$, 适合 case 较多且分布较为密集的 switch.
+      \end{itemize}
+    \item 缺点:
+      \begin{itemize}
+        \item 需要额外的内存空间存储 jump table.
+        \item case 分布过于稀疏时, jump table 会浪费大量空间.
+        \item case 较少时, 直接使用条件测试 + 固定标签跳转反而更快.
+      \end{itemize}
+  \end{itemize}
+
+  \pause
+  \qquad \texttt{gcc} 会根据 case 数量和分布情况决定是否使用 jump table.\footnote{https://godbolt.org/z/8Y3zznaME}
+\end{frame}
+
+\subsection*{switch 语句的 if-else 翻译}
+
+\begin{frame}{switch 语句的 if-else 翻译}
+  \qquad 另一种 switch 的代码实现方式: if-else 链. 我们可以将所有 case 的内部语句依据 \texttt{break} 划分为若干个代码块, 显然程序最多进入一个代码块, 这可以用最外层的 if-else 链来控制.
+
+  \,
+
+  \pause
+  \qquad 在一个代码块内, 由于没有 \texttt{break}, 程序会从某处开始顺序执行后续代码块的内容. 为此, 我们维护一个布尔变量, 记录 switch 变量是否已经触发过进入这个代码块的条件, 以决定代码块中的每条语句是否执行.
+\end{frame}
+
+\begin{frame}[fragile, shrink=5]{switch 语句的 if-else 翻译}
+  \begin{lstlisting}[language=C]
+  switch (x) {
+    case 0: x += 5;
+    case 1: x += 2;
+    case 2: x *= 9; break;
+    case 3: x *= 7;
+    case 4: x *= 4;
+    default: x -= 8;
+  }
+  \end{lstlisting}
+
+  $$
+    \Updownarrow
+  $$
+
+  \begin{lstlisting}[language=C++]
+  int sx = x; // switch 内部语句可能修改 x
+  bool entered = false;
+  if (sx == 0 || sx == 1 || sx == 2) {
+    if (entered |= sx == 0) x += 5;
+    if (entered |= sx == 1) x += 2;
+    x *= 9; // 已知进入此代码块, 所以一定会执行
+  } else { // default 所在块: 无须再判断条件...
+    if (entered |= sx == 3) x *= 7;
+    if (entered |= sx == 4) x *= 4;
+    x -= 8; // ...因为这句话一定需要执行
+  }
+  \end{lstlisting}
+\end{frame}
+
+\section{补充: 跳转的相关细节}
+
+\subsection*{跳转指令的 PC 相对编码}
+
+\begin{frame}[fragile,shrink=30]{跳转指令的 PC 相对编码}
+  \begin{lstlisting}[language=x86_64]
+0000000000000000 <popcount>:
+   0: f3 0f 1e fa           endbr64 
+   4: 55                    push   %rbp
+   5: 48 89 e5              mov    %rsp,%rbp
+   8: 89 7d ec              mov    %edi,-0x14(%rbp)
+   b: c7 45 fc 00 00 00 00  movl   $0x0,-0x4(%rbp)
+  12: eb `\color{red}13`                 `\color{orange}jmp`    27 <popcount+0x27>
+  14: 8b 45 ec              mov    -0x14(%rbp),%eax
+  17: 83 e0 01              and    $0x1,%eax
+  1a: 89 c2                 mov    %eax,%edx
+  1c: 8b 45 fc              mov    -0x4(%rbp),%eax
+  1f: 01 d0                 add    %edx,%eax
+  21: 89 45 fc              mov    %eax,-0x4(%rbp)
+  24: d1 6d ec              shrl   -0x14(%rbp)
+  27: 83 7d ec 00           cmpl   $0x0,-0x14(%rbp)
+  2b: 75 `\color{red}e7`                 `\color{orange}jne`    14 <popcount+0x14>
+  2d: 8b 45 fc              mov    -0x4(%rbp),%eax
+  30: 5d                    pop    %rbp
+  31: c3                    ret
+  \end{lstlisting}
+
+  \pause
+  \qquad $\Longrightarrow$ 一般的跳转指令使用相对编码, 计算 jmp 的\textbf{下一条指令地址}与目标指令地址的差值, 将差值编码为一个 1/2/4 byte(s) 的\textbf{补码}.
+
+  \pause
+  \qquad \textbf{c.f.} 绝对地址跳转: \texttt{jmp  *\%rax}, \texttt{jmp  *(\%rax)}, ...
+\end{frame}
+
+\subsection*{使用条件传递消除跳转}
+
+\begin{frame}{使用条件传递消除跳转}
+  \qquad 跳转指令会破坏指令流水线, 影响 CPU 的指令级并行执行效率. 因此, 在某些情况下, 我们可以使用条件传递 (conditional move) 指令来消除跳转.
+
+  \,
+
+  \pause
+  \qquad 这鼓励我们写出 "条件传递风格" 的代码\footnote{见 CS:APP p.379; 这里的目标和结论都偏经验.}.
+
+  \,
+
+  \pause
+  \qquad $2\times$ faster 冒泡排序: https://godbolt.org/z/YTG3sEqTd (彩蛋: 在这个例子中, 你还将看到 a.笨笨编译器在函数末尾放两个 \texttt{ret} 用两个 label 跳转; b. \texttt{-O3} 默认的 slp-vectorize 昏招频出带来一倍负优化.)
+\end{frame}
+
+\subsection*{\&\&, || 与 goto}
+
+\begin{frame}{\&\&, || 与 goto}
+  \qquad \texttt{\&\&} 和 \texttt{||} 总是短路求值的, 这意味着在某个表达式求值时, 我们总能假定前面的子表达式已经求值完毕且均为真/假.
+
+  \,
+
+  \pause
+  \qquad 这类似于若干个 if 语句的嵌套, 编译器一般也会将其翻译为这样的若干跳转指令.
+
+  \,
+
+  \pause
+  \qquad 不过, 类似于编译器在已知求值简单时引入 \texttt{cmov} 这一优化, 编译器 (语义上) 也可能会将 \texttt{\&\&} 和 \texttt{||} 翻译不短路的 \texttt{\&} 和 \texttt{|}, 以减少跳转指令的使用.\footnote{https://godbolt.org/z/zMz4s3aTP}
+\end{frame}
+
+\begin{frame}[plain]
+  % \vspace{0.4\textheight}
+  \begin{center}
+    \Huge\color{tyblue}\bfseries Thanks!
+  \end{center}
+\end{frame}
+
+\end{document}

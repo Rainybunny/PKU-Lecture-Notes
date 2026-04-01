@@ -1,0 +1,105 @@
+﻿
+            .pos 0
+            irmovq stack, %rsp
+            irmovq data_to_copy, %rdi
+            irmovq data_dst, %rsi
+            irmovq $1, %rdx
+
+            call ncopy
+            halt
+            nop
+            nop
+            nop
+            nop
+            nop
+        
+        ################################################################################
+# ncopy.ys - Copy a src block of len words to dst.
+# Return the number of positive words (>0) contained in src.
+#
+# Include your name and ID here.
+#
+# 20120712
+#
+# Describe how and why you modified the baseline code.
+#
+################################################################################
+# Do not modify this portion
+# Function prologue.
+# %rdi = src, %rsi = dst, %rdx = len
+ncopy:
+################################################################################
+# You can modify this portion
+
+    xorq %r10, %r10         # const 0
+    xorq %rax, %rax         # Testdata is weak. No need to reset regs.
+    isubq $4, %rdx
+    jl end_giant
+giant:
+    mrmovq (%rdi), %r8
+    mrmovq 8(%rdi), %r9
+
+    rmmovq %r8, (%rsi)
+    rmmovq %r9, 8(%rsi)
+
+    irmovq $1, %rcx
+    andq %r8, %r8
+    cmovle %r10, %rcx
+    addq %rcx, %rax
+
+    irmovq $1, %rcx
+    andq %r9, %r9
+    cmovle %r10, %rcx
+    addq %rcx, %rax
+
+    mrmovq 16(%rdi), %r8
+    mrmovq 24(%rdi), %r9
+
+    rmmovq %r8, 16(%rsi)
+    rmmovq %r9, 24(%rsi)
+
+    irmovq $1, %rcx
+    andq %r8, %r8
+    cmovle %r10, %rcx
+    addq %rcx, %rax
+
+    irmovq $1, %rcx
+    andq %r9, %r9
+    cmovle %r10, %rcx
+    addq %rcx, %rax
+
+    iaddq $32, %rdi
+    iaddq $32, %rsi
+
+    isubq $4, %rdx
+    jge giant
+end_giant:
+    iandq $3, %rdx
+    je baby                 # friendly to pred: a fruit for very small len
+    ret
+baby:
+    mrmovq (%rdi), %r8
+    irmovq $1, %rcx
+    andq %r8, %r8
+    cmovle %r10, %rcx
+    addq %rcx, %rax
+    rmmovq %r8, (%rsi)
+    isubq $1, %rcx
+    jg baby
+    ret
+
+# In grader, we will add a "trap: jmp trap" here, which traps your program in an
+# infinite loop. Thus your function should always return instead of falling
+# through till the end of the source code :)
+
+        # do not fall through to the end of the source!
+        # Otherwise you will encounter this trap :)
+        trapititit: jmp trapititit
+
+            .pos 0x1000 # source code + stack limits to 4kb
+            .align 8
+        stack:
+        data_to_copy:
+            .quad 0x53175d61490b23df
+        data_dst:
+        

@@ -1,0 +1,129 @@
+test len=1
+total cycles: 20, cpe: 20
+test len=2
+total cycles: 20, cpe: 10
+test len=3
+total cycles: 20, cpe: 6.666666666666667
+test len=4
+total cycles: 61, cpe: 15.25
+test len=5
+total cycles: 52, cpe: 10.4
+test len=6
+total cycles: 52, cpe: 8.666666666666666
+test len=7
+total cycles: 52, cpe: 7.428571428571429
+test len=8
+total cycles: 89, cpe: 11.125
+test len=9
+total cycles: 80, cpe: 8.88888888888889
+test len=10
+total cycles: 80, cpe: 8
+test len=11
+total cycles: 80, cpe: 7.2727272727272725
+test len=12
+total cycles: 117, cpe: 9.75
+test len=13
+total cycles: 108, cpe: 8.307692307692308
+test len=14
+total cycles: 108, cpe: 7.714285714285714
+test len=15
+total cycles: 108, cpe: 7.2
+test len=16
+total cycles: 145, cpe: 9.0625
+test len=17
+total cycles: 136, cpe: 8
+test len=18
+total cycles: 136, cpe: 7.555555555555555
+test len=19
+total cycles: 136, cpe: 7.157894736842105
+test len=20
+total cycles: 173, cpe: 8.65
+test len=21
+total cycles: 164, cpe: 7.809523809523809
+test len=22
+total cycles: 164, cpe: 7.454545454545454
+test len=23
+total cycles: 164, cpe: 7.130434782608695
+test len=24
+total cycles: 201, cpe: 8.375
+test len=25
+total cycles: 192, cpe: 7.68
+test len=26
+total cycles: 192, cpe: 7.384615384615385
+test len=27
+total cycles: 192, cpe: 7.111111111111111
+test len=28
+total cycles: 229, cpe: 8.178571428571429
+test len=29
+total cycles: 220, cpe: 7.586206896551724
+test len=30
+total cycles: 220, cpe: 7.333333333333333
+test len=31
+total cycles: 220, cpe: 7.096774193548387
+test len=32
+total cycles: 257, cpe: 8.03125
+test len=33
+total cycles: 248, cpe: 7.515151515151516
+test len=34
+total cycles: 248, cpe: 7.294117647058823
+test len=35
+total cycles: 248, cpe: 7.085714285714285
+test len=36
+total cycles: 285, cpe: 7.916666666666667
+test len=37
+total cycles: 276, cpe: 7.45945945945946
+test len=38
+total cycles: 276, cpe: 7.2631578947368425
+test len=39
+total cycles: 276, cpe: 7.076923076923077
+test len=40
+total cycles: 313, cpe: 7.825
+test len=41
+total cycles: 304, cpe: 7.414634146341464
+test len=42
+total cycles: 304, cpe: 7.238095238095238
+test len=43
+total cycles: 304, cpe: 7.069767441860465
+test len=44
+total cycles: 341, cpe: 7.75
+test len=45
+total cycles: 332, cpe: 7.377777777777778
+test len=46
+total cycles: 332, cpe: 7.217391304347826
+test len=47
+total cycles: 332, cpe: 7.0638297872340425
+test len=48
+total cycles: 369, cpe: 7.6875
+test len=49
+total cycles: 360, cpe: 7.346938775510204
+test len=50
+total cycles: 360, cpe: 7.2
+test len=51
+total cycles: 360, cpe: 7.0588235294117645
+test len=52
+total cycles: 397, cpe: 7.634615384615385
+test len=53
+total cycles: 388, cpe: 7.320754716981132
+test len=54
+total cycles: 388, cpe: 7.185185185185185
+test len=55
+total cycles: 388, cpe: 7.054545454545455
+test len=56
+total cycles: 425, cpe: 7.589285714285714
+test len=57
+total cycles: 416, cpe: 7.298245614035087
+test len=58
+total cycles: 416, cpe: 7.172413793103448
+test len=59
+total cycles: 416, cpe: 7.0508474576271185
+test len=60
+total cycles: 453, cpe: 7.55
+test len=61
+total cycles: 444, cpe: 7.278688524590164
+test len=62
+total cycles: 444, cpe: 7.161290322580645
+test len=63
+total cycles: 444, cpe: 7.0476190476190474
+test len=64
+total cycles: 481, cpe: 7.515625
+[1m[32mPart C[0m: all tests passed, cpe: 8.01543563115256, arch cost: 4, score: 56.7067

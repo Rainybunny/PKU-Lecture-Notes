@@ -1,0 +1,66 @@
+﻿# 20120712
+
+	.pos 0
+	irmovq	stack,%rsp
+	call main
+	halt
+
+	.align 8
+array:
+	.quad 0xbca
+	.quad 0xcba
+	.quad 0xacb
+	.quad 0xcab
+	.quad 0xabc
+	.quad 0xbac
+	
+################################################################################
+# You may want to modify this portion
+
+bubble_a:
+    rrmovq %rsi, %r8
+    addq %r8, %r8
+    addq %r8, %r8
+    addq %r8, %r8
+    addq %rdi, %r8
+    irmovq $-8, %rsi
+    addq %r8, %rsi      # leaq -8(%rdi, %rsi, 8), %rsi
+    jmp L2
+L3:
+    irmovq $8, %r8
+    addq %r8, %rax      # addq $8, %rax
+L5:
+    rrmovq %rax, %r8
+    subq %rsi, %r8      # cmpq %rsi, %rax
+    jge L7             # jnb L7
+    mrmovq 8(%rax), %rdx
+    mrmovq (%rax), %rcx
+    rrmovq %rdx, %r8
+    rrmovq %rcx, %r9     # +
+    subq %rcx, %r8
+    cmovl %rdx, %r9      # %r9 = min(%rdx, %rcx)
+    xorq %rcx, %rdx
+    xorq %r9, %rdx       # %rdx = %rdx ^ %rcx ^ %r9
+    rmmovq %rdx, 8(%rax)
+    rmmovq %r9, (%rax)
+    jmp L3
+L7:
+    irmovq $8, %r8
+    subq %r8, %rsi      # subq $8, %rsi
+L2:
+    rrmovq %rsi, %r8
+    subq %rdi, %r8      # cmpq %rdi, %rsi
+    jle L8             # jbe L8
+    rrmovq %rdi, %rax
+    jmp L5
+L8:
+    ret
+
+main:
+	irmovq array, %rdi
+	irmovq $6, %rsi
+	call bubble_a
+	ret
+
+	.pos 0x200
+stack:

@@ -1,0 +1,21 @@
+**实现要点**
+- **数据读取与预处理 (`parse_mnist`)**: 使用 `torchvision.datasets.MNIST` 读取训练集与测试集，将图像数据展平为 `(N, 28*28)` 的 numpy 数组，并线性归一化到 `[0,1]`。返回 `(X_tr, y_tr, X_te, y_te)`，其中 `X_*` 类型为 `np.float32`，`y_*` 为 `np.int32`。
+- **网络结构初始化 (`set_structure`)**: 构建一个两层网络的参数列表 `[W1, b1, W2, b2]`。
+  - `W1` 形状 `(input_dim, hidden_dim)`，用标准正态除以 `sqrt(hidden_dim)` 缩放初始值。
+  - `b1` 为 `(1, hidden_dim)` 的零偏置。
+  - `W2` 形状 `(hidden_dim, k)`，同样按 `sqrt(k)` 缩放。
+  - `b2` 为 `(1, k)` 的零偏置。
+- **前向计算 (`forward`)**: 计算 `hidden = ReLU(X @ W1 + b1)`，再 `logits = hidden @ W2 + b2`，返回 `logits`（形状 `(batch, k)`）。
+- **数值稳定的 Softmax 损失 (`softmax_loss`)**: 为避免指数溢出，先对每行 logits 减去行最大值（shifted logits），再做指数、归一化，计算对数概率并返回平均交叉熵损失。
+- **单步训练/梯度计算（`SGD_epoch` 与 `Adam_epoch`）**: 在每个 minibatch 内进行完整的前向与反向计算（用 numpy）：
+  - 先计算 `probs`（softmax 概率），对正确类别下标做 `probs[i, y_i] -= 1`，并除以 batch 大小来得到平均化的梯度。
+  - 计算 `dW2 = hidden.T @ probs`，`db2 = sum(probs)`。
+  - 通过 `dhidden = probs @ W2.T`，并对 ReLU 非线性处应用掩码 `dhidden[hidden <= 0] = 0`。
+  - 计算 `dW1 = X_batch.T @ dhidden`，`db1 = sum(dhidden)`。
+  - 在 `SGD_epoch` 中直接做原地更新：`param -= lr * grad`。
+  - 在 `Adam_epoch` 中为每个参数维护一阶矩 `m` 和二阶矩 `v`（均以与参数同形状的零张量初始化），按 Adam 公式更新：
+    - m = beta1 * m + (1-beta1) * g
+    - v = beta2 * v + (1-beta2) * (g**2)
+    - 使用偏差校正 `m_hat = m / (1 - beta1**t)`，`v_hat = v / (1 - beta2**t)`，并以 `epsilon=1e-8` 保持数值稳定，做参数更新 `param -= lr * m_hat / (sqrt(v_hat) + epsilon)`。
+- **损失与错误计算 (`loss_err`)**: 使用 `softmax_loss` 计算平均交叉熵损失，并返回分类错误率（`h.argmax(axis=1) != y` 的平均值）。
+- **训练流程 (`train_nn`)**: 负责初始化权重、设定随机种子、按 epoch 调用 `opti_epoch`（由 `using_adam` 控制 SGD/Adam），并在每个 epoch 后打印训练/测试的损失与错误率汇总表格。

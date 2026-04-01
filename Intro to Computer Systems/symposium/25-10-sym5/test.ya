@@ -1,0 +1,58 @@
+bubble:
+    rrmovq %rsi, %r8
+    addq %r8, %r8
+    addq %r8, %r8
+    addq %r8, %r8
+    addq %rdi, %r8
+    irmovq $-8, %rsi
+    addq %r8, %rsi      ; leaq -8(%rdi, %rsi, 8), %rsi
+    jmp .L2
+.L3:
+    irmovq $8, %r8
+    addq %r8, %rax      ; addq $8, %rax
+.L5:
+    rrmovq %rax, %r8
+    subq %rsi, %r8      ; cmpq %rsi, %rax
+    jge .L7             ; jnb .L7
+    mrmovq 8(%rax), %rdx
+    mrmovq (%rax), %rcx
+    rrmovq %rdx, %r8
+    subq %rcx, %r8      ; cmpq %rcx, %rdx
+    jge .L3
+    rmmovq %rcx, 8(%rax)
+    rmmovq %rdx, (%rax)
+    jmp .L3
+.L7:
+    irmovq $8, %r8
+    subq %r8, %rsi      ; subq $8, %rsi
+.L2:
+    rrmovq %rsi, %r8
+    subq %rdi, %r8      ; cmpq %rdi, %rsi
+    jle .L8             ; jbe .L8
+    rrmovq %rdi, %rax
+    jmp .L5
+.L8:
+    ret
+
+main:
+    irmovq $56, %r8
+    subq %r8, %rsp      ; subq $56, %rsp
+    irmovq $3, %r8
+    rmmovq %r8, (%rsp)
+    irmovq $1, %r8
+    rmmovq %r8, 8(%rsp)
+    irmovq $4, %r8
+    rmmovq %r8, 16(%rsp)
+    irmovq $1, %r8
+    rmmovq %r8, 24(%rsp)
+    irmovq $5, %r8
+    rmmovq %r8, 32(%rsp)
+    irmovq $9, %r8
+    rmmovq %r8, 40(%rsp)
+    rrmovq %rsp, %rdi
+    irmovq $6, %rsi
+    call bubble
+    irmovq $0, %rax
+    irmovq $56, %r8
+    addq %r8, %rsp
+    ret

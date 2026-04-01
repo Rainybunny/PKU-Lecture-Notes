@@ -1,0 +1,42 @@
+
+test.o:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000000000000 <foo>:
+   0:	f3 0f 1e fa          	endbr64 
+   4:	83 ff 01             	cmp    $0x1,%edi
+   7:	74 0b                	je     14 <foo+0x14>
+   9:	7f 16                	jg     21 <foo+0x21>
+   b:	85 ff                	test   %edi,%edi
+   d:	75 0c                	jne    1b <foo+0x1b>
+   f:	bf 72 00 00 00       	mov    $0x72,%edi
+  14:	8d 87 02 02 00 00    	lea    0x202(%rdi),%eax
+  1a:	c3                   	ret    
+  1b:	b8 2a 03 00 00       	mov    $0x32a,%eax
+  20:	c3                   	ret    
+  21:	83 ef 03             	sub    $0x3,%edi
+  24:	83 ff 01             	cmp    $0x1,%edi
+  27:	77 06                	ja     2f <foo+0x2f>
+  29:	b8 7f 07 00 00       	mov    $0x77f,%eax
+  2e:	c3                   	ret    
+  2f:	b8 2a 03 00 00       	mov    $0x32a,%eax
+  34:	c3                   	ret    
+
+0000000000000035 <bar>:
+  35:	f3 0f 1e fa          	endbr64 
+  39:	83 ff 04             	cmp    $0x4,%edi
+  3c:	77 25                	ja     63 <bar+0x2e>
+  3e:	48 8d 05 00 00 00 00 	lea    0x0(%rip),%rax        # 45 <bar+0x10>
+  45:	48 63 d7             	movslq %edi,%rdx
+  48:	ff 24 d0             	jmp    *(%rax,%rdx,8)
+  4b:	f3 0f 1e fa          	endbr64 
+  4f:	bf 72 00 00 00       	mov    $0x72,%edi
+  54:	f3 0f 1e fa          	endbr64 
+  58:	8d 87 02 02 00 00    	lea    0x202(%rdi),%eax
+  5e:	c3                   	ret    
+  5f:	f3 0f 1e fa          	endbr64 
+  63:	f3 0f 1e fa          	endbr64 
+  67:	b8 2a 03 00 00       	mov    $0x32a,%eax
+  6c:	c3                   	ret    

@@ -1,0 +1,25 @@
+
+popc.o:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000000000000 <popcount>:
+   0: f3 0f 1e fa            endbr64 
+   4: 55                     push   %rbp
+   5: 48 89 e5               mov    %rsp,%rbp
+   8: 89 7d ec               mov    %edi,-0x14(%rbp)
+   b: c7 45 fc 00 00 00 00   movl   $0x0,-0x4(%rbp)
+  12: eb 13                  jmp    27 <popcount+0x27>
+  14: 8b 45 ec               mov    -0x14(%rbp),%eax
+  17: 83 e0 01               and    $0x1,%eax
+  1a: 89 c2                  mov    %eax,%edx
+  1c: 8b 45 fc               mov    -0x4(%rbp),%eax
+  1f: 01 d0                  add    %edx,%eax
+  21: 89 45 fc               mov    %eax,-0x4(%rbp)
+  24: d1 6d ec               shrl   -0x14(%rbp)
+  27: 83 7d ec 00            cmpl   $0x0,-0x14(%rbp)
+  2b: 75 e7                  jne    14 <popcount+0x14>
+  2d: 8b 45 fc               mov    -0x4(%rbp),%eax
+  30: 5d                     pop    %rbp
+  31: c3                     ret

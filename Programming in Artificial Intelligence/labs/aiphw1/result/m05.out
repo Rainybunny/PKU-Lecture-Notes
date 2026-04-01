@@ -1,0 +1,22 @@
+epoch 0 | loss 2.153079312475746 | acc 19.554%
+epoch 1 | loss 1.8071141224687972 | acc 33.892%
+epoch 2 | loss 1.5822202735544775 | acc 42.206%
+epoch 3 | loss 1.4548371487566272 | acc 47.484%
+epoch 4 | loss 1.3658983573279417 | acc 50.898%
+epoch 5 | loss 1.2939570428770217 | acc 53.590%
+epoch 6 | loss 1.2330681530715863 | acc 56.156%
+epoch 7 | loss 1.1861098184609962 | acc 57.856%
+epoch 8 | loss 1.1431153736760855 | acc 59.814%
+epoch 9 | loss 1.1050803603418649 | acc 61.070%
+Finished Training
+Class 0 | Accuracy: 57.100%
+Class 1 | Accuracy: 60.300%
+Class 2 | Accuracy: 43.600%
+Class 3 | Accuracy: 42.800%
+Class 4 | Accuracy: 43.700%
+Class 5 | Accuracy: 45.800%
+Class 6 | Accuracy: 77.700%
+Class 7 | Accuracy: 72.100%
+Class 8 | Accuracy: 79.300%
+Class 9 | Accuracy: 68.300%
+Overall Accuracy: 59.070%
