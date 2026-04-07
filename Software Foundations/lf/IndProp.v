@@ -363,9 +363,12 @@ cms 16 8           cms 8 4           cms 4 2           cms 2 1
     How would you modify the [clos_refl_trans] definition above so as
     to define the reflexive, symmetric, and transitive closure? *)
 
-(* FILL IN HERE
-
-    [] *)
+Inductive clos_refl_symm_trans {X : Type} (R : X -> X -> Prop)
+  : (X -> X -> Prop) :=
+  | rst_step x y : R x y -> clos_refl_symm_trans R x y
+  | rst_refl x : clos_refl_symm_trans R x x
+  | rst_symm x y : R x y -> clos_refl_symm_trans R y x
+  | rst_trans x y z : R x y -> R y z -> clos_refl_symm_trans R x z.
 
 (* ================================================================= *)
 (** ** Example: Permutations *)
