@@ -48,7 +48,8 @@
 
 # ignore large textbook or materials
 /Intro to Artificial Intelligence/material
-/Intro to Computer Systems/assets/textbook.pdf
+# /Intro to Computer Systems/assets/textbook.pdf
+**/textbook*
 /Intro to Software Foundations/lf
 /Intro to Software Foundations/plf
 
