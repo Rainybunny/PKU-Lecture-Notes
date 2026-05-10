@@ -1685,8 +1685,11 @@ Proof.
       [loopdef] terminates.  Most of the cases are immediately
       contradictory and so can be solved in one step with
       [discriminate]. *)
-
-  (* FILL IN HERE *) Admitted.
+  induction contra;
+  try discriminate Heqloopdef.
+  - inversion Heqloopdef. subst. discriminate H.
+  - inversion Heqloopdef. subst. apply IHcontra2. reflexivity.
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars, standard (no_whiles_eqv)

@@ -462,23 +462,39 @@ Admitted.
     it is sound.  Use the tacticals we've just seen to make the proof
     as short and elegant as possible. *)
 
-Fixpoint optimize_0plus_b (b : bexp) : bexp
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+Fixpoint optimize_0plus_b (b : bexp) : bexp :=
+  match b with
+  | BTrue => BTrue
+  | BFalse => BFalse
+  | BEq a1 a2 => BEq (optimize_0plus a1) (optimize_0plus a2)
+  | BNeq a1 a2 => BNeq (optimize_0plus a1) (optimize_0plus a2)
+  | BLe a1 a2 => BLe (optimize_0plus a1) (optimize_0plus a2)
+  | BGt a1 a2 => BGt (optimize_0plus a1) (optimize_0plus a2)
+  | BNot b => BNot (optimize_0plus_b b)
+  | BAnd b1 b2 => BAnd (optimize_0plus_b b1) (optimize_0plus_b b2)
+  end.
 
 Example optimize_0plus_b_test1:
   optimize_0plus_b (BNot (BGt (APlus (ANum 0) (ANum 4)) (ANum 8))) =
                    (BNot (BGt (ANum 4) (ANum 8))).
-Proof. (* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 
 Example optimize_0plus_b_test2:
   optimize_0plus_b (BAnd (BLe (APlus (ANum 0) (ANum 4)) (ANum 5)) BTrue) =
                    (BAnd (BLe (ANum 4) (ANum 5)) BTrue).
-Proof. (* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 
 Theorem optimize_0plus_b_sound : forall b,
   beval (optimize_0plus_b b) = beval b.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  induction b;
+  try simpl;
+  try (repeat rewrite optimize_0plus_sound; reflexivity).
+  - f_equal. apply IHb.
+  - rewrite IHb1. rewrite IHb2. reflexivity.
+Qed.
+
 (** [] *)
 
 (** **** Exercise: 4 stars, standard, optional (optimize)
@@ -857,14 +873,26 @@ Qed.
 
 Reserved Notation "e '==>b' b" (at level 90, left associativity).
 Inductive bevalR: bexp -> bool -> Prop :=
-(* FILL IN HERE *)
+  | E_BTrue : BTrue ==>b true
+  | E_BFalse : BFalse ==>b false
+  | E_BEq a1 a2 : (BEq a1 a2) ==>b (aeval a1) =? (aeval a2)
+  | E_BNeq a1 a2 : (BNeq a1 a2) ==>b negb ((aeval a1) =? (aeval a2))
+  | E_BLe a1 a2 : (BLe a1 a2) ==>b (aeval a1) <=? (aeval a2)
+  | E_BGt a1 a2  : (BGt a1 a2) ==>b negb ((aeval a1) <=? (aeval a2))
+  | E_BNot b     : (BNot b) ==>b negb (beval b)
+  | E_BAnd b1 b2 : (BAnd b1 b2) ==>b andb (beval b1) (beval b2)
+
 where "e '==>b' b" := (bevalR e b) : type_scope
 .
 
 Lemma bevalR_iff_beval : forall b bv,
   b ==>b bv <-> beval b = bv.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  split.
+  - induction b; intros; inversion H; simpl; reflexivity.
+  - induction b; intros; inversion H; simpl; constructor.
+Qed.
+
 (** [] *)
 
 End AExp.
@@ -1569,7 +1597,12 @@ Example ceval_example2:
     Z := 2
   ]=> (Z !-> 2 ; Y !-> 1 ; X !-> 0).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  apply E_Seq with (X !-> 0).
+  - apply E_Asgn. reflexivity.
+  - apply E_Seq with (Y !-> 1; X !-> 0);
+    apply E_Asgn; reflexivity.
+Qed.
+
 (** [] *)
 
 Set Printing Implicit.
@@ -1583,15 +1616,35 @@ Check @ceval_example2.
     which you can reverse-engineer to discover the program you should
     write.  The proof of that theorem will be somewhat lengthy. *)
 
-Definition pup_to_n : com
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+Definition pup_to_n : com := <{
+  Y := 0;
+  while X > 0 do
+    Y := Y + X;
+    X := X - 1
+  end
+}>.
 
 Theorem pup_to_2_ceval :
   (X !-> 2) =[
     pup_to_n
   ]=> (X !-> 0 ; Y !-> 3 ; X !-> 1 ; Y !-> 2 ; Y !-> 0 ; X !-> 2).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  unfold pup_to_n.
+  apply E_Seq with (Y !-> 0 ; X !-> 2).
+  - apply E_Asgn. reflexivity.
+  - apply E_WhileTrue with (X !-> 1 ; Y !-> 2 ; Y !-> 0 ; X !-> 2).
+    + reflexivity.
+    + apply E_Seq with (Y !-> 2 ; Y !-> 0 ; X !-> 2);
+      apply E_Asgn; reflexivity.
+    + apply E_WhileTrue with (X !-> 0 ; Y !-> 3 ; X !-> 1;
+                              Y !-> 2 ; Y !-> 0 ; X !-> 2).
+      * reflexivity.
+      * apply E_Seq with (Y !-> 3 ; X !-> 1;
+                          Y !-> 2 ; Y !-> 0 ; X !-> 2);
+        apply E_Asgn; reflexivity.
+      * apply E_WhileFalse. reflexivity.
+Qed.
+
 (** [] *)
 
 (* ================================================================= *)
@@ -1667,7 +1720,16 @@ Proof.
 
     State and prove a specification of [XtimesYinZ]. *)
 
-(* FILL IN HERE *)
+Ltac invert H := inversion H; subst; clear H.
+
+Theorem XtimesYinZ_spec : forall st n m st',
+  st X = n -> st Y = m -> st =[ XtimesYinZ ]=> st'
+  -> st' Z = n * m.
+Proof.
+  intros.
+  invert H1.
+  apply t_update_eq.
+Qed.
 
 (* Do not modify the following line: *)
 Definition manual_grade_for_XtimesYinZ_spec : option (nat*string) := None.
@@ -1685,8 +1747,12 @@ Proof.
       [loopdef] terminates.  Most of the cases are immediately
       contradictory and so can be solved in one step with
       [discriminate]. *)
+  induction contra;
+  try discriminate Heqloopdef.
+  - invert Heqloopdef. discriminate H.
+  - invert Heqloopdef. apply IHcontra2. reflexivity.
+Qed.
 
-  (* FILL IN HERE *) Admitted.
 (** [] *)
 
 (** **** Exercise: 3 stars, standard (no_whiles_eqv)
@@ -1713,13 +1779,38 @@ Fixpoint no_whiles (c : com) : bool :=
     while loops.  Then prove its equivalence with [no_whiles]. *)
 
 Inductive no_whilesR: com -> Prop :=
- (* FILL IN HERE *)
-.
+  | N_Skip : no_whilesR <{ skip }>
+  | N_Asgn x a : no_whilesR <{ x := a }>
+  | N_Seq c1 c2 (H1 : no_whilesR c1) (H2 : no_whilesR c2) :
+    no_whilesR <{ c1; c2 }>
+  | N_if b ct cf (Ht : no_whilesR ct) (Hf : no_whilesR cf) :
+    no_whilesR <{ if b then ct else cf end }>.
 
 Theorem no_whiles_eqv:
   forall c, no_whiles c = true <-> no_whilesR c.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  split; intros.
+  - induction c; invert H;
+    try constructor;
+    try (
+      symmetry in H1;
+      destruct (andb_true_eq _ _ H1) as [Hx Hy];
+      symmetry in Hx; symmetry in Hy;
+      try apply IHc1;
+      try apply IHc2;
+      try apply Hx;
+      try apply Hy).
+  - induction H;
+    try reflexivity;
+    try (
+      invert IHno_whilesR1;
+      invert IHno_whilesR2;
+      simpl;
+      rewrite H2; rewrite H3;
+      reflexivity
+    ).
+Qed.
+
 (** [] *)
 
 (** **** Exercise: 4 stars, standard (no_whiles_terminating)
@@ -1729,7 +1820,23 @@ Proof.
 
     Use either [no_whiles] or [no_whilesR], as you prefer. *)
 
-(* FILL IN HERE *)
+Theorem no_whiles_terminating : forall c,
+  no_whilesR c -> forall st, exists st', st =[ c ]=> st'.
+Proof.
+  intros c H.
+  induction H; intros.
+  - exists st. constructor.
+  - exists (x !-> aeval st a; st). constructor. reflexivity.
+  - destruct (IHno_whilesR1 st) as [st1 E1].
+    destruct (IHno_whilesR2 st1) as [st2 E2].
+    exists st2. apply E_Seq with st1.
+    apply E1. apply E2.
+  - destruct (IHno_whilesR1 st) as [stt Et].
+    destruct (IHno_whilesR2 st) as [stf Ef].
+    destruct (beval st b) eqn:Bv.
+    + exists stt. apply E_IfTrue. apply Bv. apply Et.
+    + exists stf. apply E_IfFalse. apply Bv. apply Ef.
+Qed.
 
 (* Do not modify the following line: *)
 Definition manual_grade_for_no_whiles_terminating : option (nat*string) := None.
@@ -1800,8 +1907,27 @@ Inductive sinstr : Type :=
 
 Fixpoint s_execute (st : state) (stack : list nat)
                    (prog : list sinstr)
-                 : list nat
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+                 : list nat :=
+  match prog with
+  | nil => stack
+  | (SPush n) :: prog' => s_execute st (n :: stack) prog'
+  | (SLoad x) :: prog' => s_execute st (st x :: stack) prog'
+  | SPlus :: prog' =>
+    match stack with
+    | v2 :: v1 :: stk' => s_execute st ((v1 + v2) :: stk') prog'
+    | _ => s_execute st stack prog' (* illegal, omitted *)
+    end
+  | SMinus :: prog' =>
+    match stack with
+    | v2 :: v1 :: stk' => s_execute st ((v1 - v2) :: stk') prog'
+    | _ => s_execute st stack prog' (* illegal, omitted *)
+    end
+  | SMult :: prog' =>
+    match stack with
+    | v2 :: v1 :: stk' => s_execute st ((v1 * v2) :: stk') prog'
+    | _ => s_execute st stack prog' (* illegal, omitted *)
+    end
+  end.
 
 Check s_execute.
 
@@ -1809,20 +1935,26 @@ Example s_execute1 :
      s_execute empty_st []
        [SPush 5; SPush 3; SPush 1; SMinus]
    = [2; 5].
-(* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 
 Example s_execute2 :
      s_execute (X !-> 3) [3;4]
        [SPush 4; SLoad X; SMult; SPlus]
    = [15; 4].
-(* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 
 (** Next, write a function that compiles an [aexp] into a stack
     machine program. The effect of running the program should be the
     same as pushing the value of the expression on the stack. *)
 
-Fixpoint s_compile (e : aexp) : list sinstr
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+Fixpoint s_compile (e : aexp) : list sinstr :=
+  match e with
+  | ANum n => [ SPush n ]
+  | AId x => [ SLoad x ]
+  | APlus a1 a2 => (s_compile a1) ++ (s_compile a2) ++ [ SPlus ]
+  | AMinus a1 a2 => (s_compile a1) ++ (s_compile a2) ++ [ SMinus ]
+  | AMult a1 a2 => (s_compile a1) ++ (s_compile a2) ++ [ SMult ]
+  end.
 
 (** After you've defined [s_compile], prove the following to test
     that it works. *)
@@ -1830,7 +1962,8 @@ Fixpoint s_compile (e : aexp) : list sinstr
 Example s_compile1 :
   s_compile <{ X - (2 * Y) }>
   = [SLoad X; SPush 2; SLoad Y; SMult; SMinus].
-(* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
+
 (** [] *)
 
 (** **** Exercise: 3 stars, standard (execute_app) *)
@@ -1843,7 +1976,16 @@ Example s_compile1 :
 Theorem execute_app : forall st p1 p2 stack,
   s_execute st stack (p1 ++ p2) = s_execute st (s_execute st stack p1) p2.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros st p1 p2.
+  induction p1; simpl.
+  - reflexivity.
+  - destruct a;
+    try (intros; simpl; try apply IHp1);
+    try (
+      destruct stack as [ | v2 [ | v1 stk]];
+      simpl; try apply IHp1; reflexivity
+    ).
+Qed.
 
 (** [] *)
 
@@ -1857,14 +1999,27 @@ Proof.
 Lemma s_compile_correct_aux : forall st e stack,
   s_execute st stack (s_compile e) = aeval st e :: stack.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros st e.
+  induction e; intros;
+    try reflexivity;
+    try (
+      simpl;
+      repeat rewrite execute_app;
+      rewrite IHe1 with stack;
+      rewrite IHe2 with (aeval st e1 :: stack);
+      reflexivity
+    ).
+Qed.
 
 (** The main theorem should be a very easy corollary of that lemma. *)
 
 Theorem s_compile_correct : forall (st : state) (e : aexp),
   s_execute st [] (s_compile e) = [ aeval st e ].
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  rewrite s_compile_correct_aux with (stack:=[]).
+  reflexivity.
+Qed.
 
 (** [] *)
 
@@ -1885,9 +2040,30 @@ Proof.
     would _not_ be equivalent to the original, since it would make more
     programs terminate.) *)
 
-(* FILL IN HERE
+Fixpoint beval_sc (st : state) (b : bexp) : bool :=
+  match b with
+  | <{true}>      => true
+  | <{false}>     => false
+  | <{a1 = a2}>   => (aeval st a1) =? (aeval st a2)
+  | <{a1 <> a2}>  => negb ((aeval st a1) =? (aeval st a2))
+  | <{a1 <= a2}>  => (aeval st a1) <=? (aeval st a2)
+  | <{a1 > a2}>   => negb ((aeval st a1) <=? (aeval st a2))
+  | <{~ b1}>      => negb (beval_sc st b1)
+  | <{b1 && b2}>  =>
+    match (beval_sc st b1) with
+    | true => beval st b2
+    | _ => false
+    end
+  end.
 
-    [] *)
+Theorem beval_sc_equivalent : forall b st, beval_sc st b = beval st b.
+Proof.
+  intros b.
+  induction b; intros; simpl; try reflexivity.
+  - f_equal. apply IHb.
+  - rewrite IHb1 with st.
+    destruct (beval st b1); reflexivity.
+Qed.
 
 Module BreakImp.
 (** **** Exercise: 4 stars, standard, optional (break_imp)
@@ -2011,7 +2187,38 @@ Reserved Notation
 Inductive ceval : com -> state -> result -> state -> Prop :=
   | E_Skip : forall st,
       st =[ CSkip ]=> st / SContinue
-  (* FILL IN HERE *)
+  | E_Asgn  : forall st a n x,
+      aeval st a = n ->
+      st =[ x := a ]=> (x !-> n ; st) / SContinue
+  | E_Break : forall st,
+      st =[ CBreak ]=> st / SBreak
+  | E_SeqCont : forall c1 c2 st st' st'' res,
+      st  =[ c1 ]=> st' / SContinue  ->
+      st' =[ c2 ]=> st'' / res ->
+      st  =[ c1 ; c2 ]=> st'' / res
+  | E_SeqBreak : forall c1 c2 st st',
+      st  =[ c1 ]=> st' / SBreak ->
+      st  =[ c1 ; c2 ]=> st' / SBreak
+  | E_IfTrue : forall st st' b c1 c2 res,
+      beval st b = true ->
+      st =[ c1 ]=> st' / res ->
+      st =[ if b then c1 else c2 end ]=> st' / res
+  | E_IfFalse : forall st st' b c1 c2 res,
+      beval st b = false ->
+      st =[ c2 ]=> st' / res ->
+      st =[ if b then c1 else c2 end ]=> st' / res
+  | E_WhileFalse : forall b st c,
+      beval st b = false ->
+      st =[ while b do c end ]=> st / SContinue
+  | E_WhileTrueCont : forall st st' st'' b c,
+      beval st b = true ->
+      st  =[ c ]=> st' / SContinue ->
+      st' =[ while b do c end ]=> st'' / SContinue ->
+      st  =[ while b do c end ]=> st'' / SContinue
+  | E_WhileTrueBreak : forall st st' b c,
+      beval st b = true ->
+      st  =[ c ]=> st' / SBreak ->
+      st  =[ while b do c end ]=> st' / SContinue
 
   where "st '=[' c ']=>' st' '/' s" := (ceval c st s st').
 
@@ -2021,33 +2228,52 @@ Theorem break_ignore : forall c st st' s,
      st =[ break; c ]=> st' / s ->
      st = st'.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  invert H.
+  invert H2.
+  invert H5.
+  reflexivity.
+Qed.
 
 Theorem while_continue : forall b c st st' s,
   st =[ while b do c end ]=> st' / s ->
   s = SContinue.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  invert H; reflexivity.
+Qed.
 
 Theorem while_stops_on_break : forall b c st st',
   beval st b = true ->
   st =[ c ]=> st' / SBreak ->
   st =[ while b do c end ]=> st' / SContinue.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  apply E_WhileTrueBreak.
+  - apply H.
+  - apply H0.
+Qed.
 
 Theorem seq_continue : forall c1 c2 st st' st'',
   st =[ c1 ]=> st' / SContinue ->
   st' =[ c2 ]=> st'' / SContinue ->
   st =[ c1 ; c2 ]=> st'' / SContinue.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  apply E_SeqCont with st'.
+  - apply H.
+  - apply H0.
+Qed.
 
 Theorem seq_stops_on_break : forall c1 c2 st st',
   st =[ c1 ]=> st' / SBreak ->
   st =[ c1 ; c2 ]=> st' / SBreak.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  apply E_SeqBreak.
+  apply H.
+Qed.
+
 (** [] *)
 
 (** **** Exercise: 3 stars, advanced, optional (while_break_true) *)
@@ -2056,7 +2282,14 @@ Theorem while_break_true : forall b c st st',
   beval st' b = true ->
   exists st'', st'' =[ c ]=> st' / SBreak.
 Proof.
-(* FILL IN HERE *) Admitted.
+  intros.
+  remember <{ while b do c end }> as loop eqn:El.
+  induction H; inversion El; subst.
+  - rewrite H in H0. discriminate H0.
+  - apply IHceval2; assumption.
+  - exists st. assumption.
+Qed.
+
 (** [] *)
 
 (** **** Exercise: 4 stars, advanced, optional (ceval_deterministic) *)
@@ -2065,7 +2298,13 @@ Theorem ceval_deterministic: forall (c:com) st st1 st2 s1 s2,
      st =[ c ]=> st2 / s2 ->
      st1 = st2 /\ s1 = s2.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  split.
+  - induction c;
+    try (invert H; invert H0; reflexivity).
+    + invert H. invert H0.
+      (* apply (IHc1 H3 ) *)
+Admitted.
 
 (** [] *)
 End BreakImp.

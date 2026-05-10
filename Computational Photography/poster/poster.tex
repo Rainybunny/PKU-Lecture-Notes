@@ -1,0 +1,620 @@
+%% ============================================================
+%%  Spike Cameras for High-Speed Computer Vision — Survey Poster
+%%  16:9   120 cm × 67.5 cm
+%%  pdflatex poster.tex  (×2)
+%% ============================================================
+\documentclass[final]{beamer}
+\usepackage[size=custom,width=120,height=67.5,scale=1.0]{beamerposter}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb}
+\usepackage{array,tabularx,booktabs,multirow}
+\usepackage{multicol}
+\usepackage[dvipsnames,table]{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,backgrounds,shapes.geometric,
+                decorations.pathreplacing,calc,shadows.blur,matrix}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage{tcolorbox}
+\tcbuselibrary{skins,breakable,raster}
+
+%% ── Beamer reset ──────────────────────────────────────────────
+\usetheme{default}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{headline}{}
+\setbeamertemplate{footline}{}
+\setbeamersize{text margin left=0pt,text margin right=0pt}
+
+%% ── Colours ───────────────────────────────────────────────────
+\definecolor{NavyBlue}{RGB}{12,35,75}
+\definecolor{TealAccent}{RGB}{0,175,155}
+\definecolor{LightBg}{RGB}{238,244,252}
+\definecolor{AccentOrange}{RGB}{220,110,20}
+\definecolor{MidBlue}{RGB}{25,90,175}
+\definecolor{SoftWhite}{RGB}{250,252,255}
+\definecolor{GrayLine}{RGB}{170,185,210}
+\definecolor{SensorCol}{RGB}{0,155,130}
+\definecolor{FlowCol}{RGB}{40,110,210}
+\definecolor{DepthCol}{RGB}{195,80,15}
+\definecolor{ReprCol}{RGB}{135,35,140}
+\definecolor{TrackCol}{RGB}{170,145,0}
+\definecolor{ToolCol}{RGB}{45,155,55}
+\definecolor{AlgoCol}{RGB}{60,100,200}
+\definecolor{HWCol}{RGB}{0,150,120}
+\definecolor{TheoryCol}{RGB}{100,40,160}
+\definecolor{PlatCol}{RGB}{40,150,50}
+\definecolor{BandDark}{RGB}{8,25,58}
+
+%% ── tcolorbox styles ──────────────────────────────────────────
+\tcbset{
+  pbox/.style={
+    enhanced, colback=SoftWhite, colframe=#1, colbacktitle=#1,
+    coltitle=white, fonttitle=\bfseries\normalsize,
+    boxrule=0.8pt, arc=4pt,
+    left=4pt, right=4pt, top=3pt, bottom=3pt,
+    titlerule=0pt,
+    attach boxed title to top left={yshift=-2.5pt,xshift=5pt},
+    boxed title style={colframe=#1,arc=2pt,boxrule=0pt,
+                       left=5pt,right=5pt,top=2pt,bottom=2pt},
+    drop shadow={opacity=0.12},
+  },
+  refbox/.style={
+    enhanced, colback=BandDark, colframe=TealAccent,
+    coltext=white, boxrule=1pt, arc=0pt,
+    left=8pt, right=8pt, top=5pt, bottom=5pt,
+  },
+}
+
+\newcommand{\paper}[1]{\hyperlink{ref:#1}{\textcolor{TealAccent}{\textsuperscript{\textbf{[#1]}}}}}
+\newcommand{\metric}[1]{\textcolor{AccentOrange}{\textbf{#1}}}
+\newcommand{\hl}[1]{\textcolor{MidBlue}{\textbf{#1}}}
+
+%% widths
+\newlength{\CW}\setlength{\CW}{38.0cm}    % column width
+\newlength{\FW}\setlength{\FW}{119.0cm}   % full inner width
+
+\begin{document}
+\begin{frame}[t]{}
+\hfuzz=18pt
+
+%% ════════════════════════════════════════════════════════════
+%%  TITLE BAND  (full width, 8.2 cm tall)
+%% ════════════════════════════════════════════════════════════
+\begin{tikzpicture}[remember picture]
+  \fill[NavyBlue] (0,0) rectangle (120cm,8.2cm);
+  \fill[TealAccent] (0,0) rectangle (120cm,0.30cm);
+  \fill[TealAccent!30] (0,0.30cm) rectangle (120cm,0.42cm);
+  %% Title
+  \node[anchor=center,text=white,font=\bfseries\fontsize{46}{52}\selectfont,
+        align=center]
+    at (60cm,6.5cm)
+    {Spike Cameras for High-Speed Computer Vision};
+  %% Subtitle
+  \node[anchor=center,text=TealAccent,font=\itshape\fontsize{22}{26}\selectfont,
+        align=center]
+    at (60cm,5.0cm)
+    {A Survey of 10 Works (2017–2026)};
+  %% Authors line
+  \node[anchor=center,text=LightBg,font=\fontsize{15}{18}\selectfont,
+        align=center]
+    at (60cm,3.75cm)
+    {Dong [1] $\cdot$ Huang [4] $\cdot$ Hu [2] $\cdot$
+     Zhao [5] $\cdot$ Zhang [3] $\cdot$ Gao [7] $\cdot$
+     Guo [6] $\cdot$ Zheng [9,10] $\cdot$ Cao [8]};
+  %% Neuron icon (decorative)
+  \begin{scope}[shift={(115.5cm,4.5cm)}]
+    \foreach \a/\c in {0/TealAccent,72/TealAccent!70,144/TealAccent!50,216/TealAccent!70,288/TealAccent!50}{
+      \draw[\c,line width=1.4pt] (0,0)--(\a:1.15cm);
+      \fill[\c] (\a:1.15cm) circle(2.5pt);
+    }
+    \fill[TealAccent] (0,0) circle(7pt);
+  \end{scope}
+\end{tikzpicture}
+
+\vspace{0.12cm}
+
+%% ════════════════════════════════════════════════════════════
+%%  FULL-WIDTH DEPTH-OF-FIELD ARCHITECTURE STRIP
+%%  Shows the vertical research stack that connects all papers
+%% ════════════════════════════════════════════════════════════
+\hspace{0.5cm}%
+\begin{tikzpicture}[font=\small]
+
+%% ── 4 layers ──────────────────────────────────────────────────
+\node[draw=TheoryCol, fill=TheoryCol!14, rounded corners=5pt,
+      minimum height=2.0cm, align=center, text width=20cm,
+      minimum width=22cm, text=TheoryCol!80!black,
+      drop shadow={opacity=0.10}]
+  (theory) at (0,0)
+  {\bfseries\normalsize Theoretical Foundations\\[3pt]
+   \footnotesize Integrate-and-fire model $\cdot$ Spike coding \& compression\\
+   Binary stream as scene representation};
+
+\node[draw=HWCol, fill=HWCol!14, rounded corners=5pt,
+      minimum height=2.0cm, align=center, text width=26cm,
+      minimum width=28cm, text=HWCol!80!black,
+      drop shadow={opacity=0.10},
+      right=1.6cm of theory]
+  (hw)
+  {\bfseries\normalsize Hardware \& Simulation Layer\\[3pt]
+   \footnotesize VidarOne chip (40 kHz, $>$100 dB DR)\\
+   SPCS \& SpikingSIM simulators $\cdot$ SCHSSD/SPIFT/DENSE datasets};
+
+\node[draw=AlgoCol, fill=AlgoCol!14, rounded corners=5pt,
+      minimum height=2.0cm, align=center, text width=41cm,
+      minimum width=43cm, text=AlgoCol!80!black,
+      drop shadow={opacity=0.10},
+      right=1.6cm of hw]
+  (algo)
+  {\bfseries\normalsize Algorithm Design Layer\\[3pt]
+   \footnotesize \textbf{Scene Recon.}\ (TFL/TFP/SNN) $|$
+   \textbf{Optical Flow}\ (SCFlow, HiST-SFlow) $|$
+   \textbf{Monocular Depth}\ (Spike Transformer)\\
+   \footnotesize \textbf{Stereo Depth}\ (SpikeStereoNet) $|$
+   \textbf{Novel View}\ (Spike-NeRF) $|$
+   \textbf{MOT}\ (SNNTracker)};
+
+\node[draw=PlatCol, fill=PlatCol!14, rounded corners=5pt,
+      minimum height=2.0cm, align=center, text width=16cm,
+      minimum width=18cm, text=PlatCol!80!black,
+      drop shadow={opacity=0.10},
+      right=1.6cm of algo]
+  (plat)
+  {\bfseries\normalsize Open Platform\\[3pt]
+   \footnotesize SpikeCV \textbf{[10]}\\
+   Unified API $\cdot$ HW interface\\
+   Standardized datasets};
+
+%% ── Arrows ────────────────────────────────────────────────────
+\draw[-{Stealth[length=6pt,width=5pt]}, line width=1.8pt, TheoryCol!80]
+  (theory.east) -- (hw.west);
+\draw[-{Stealth[length=6pt,width=5pt]}, line width=1.8pt, HWCol!80]
+  (hw.east) -- (algo.west);
+\draw[-{Stealth[length=6pt,width=5pt]}, line width=1.8pt, AlgoCol!80]
+  (algo.east) -- (plat.west);
+
+%% ── Paper labels ──────────────────────────────────────────────
+\node[font=\footnotesize, text=TheoryCol!70!black, align=center,
+      text width=20cm, below=0.10cm of theory]
+  {Dong et al.\ \textbf{[1]} $\cdot$ Huang et al.\ \textbf{[4]}};
+\node[font=\footnotesize, text=HWCol!70!black, align=center,
+      text width=26cm, below=0.10cm of hw]
+  {Huang \textbf{[4]} $\cdot$ Hu \textbf{[2]} (SPCS sim.) $\cdot$ Zhang \textbf{[3]} (DENSE-spike)};
+\node[font=\footnotesize, text=AlgoCol!70!black, align=center,
+      text width=41cm, below=0.10cm of algo]
+  {Hu \textbf{[2]}, Zhao \textbf{[5]}, Zhang \textbf{[3]}, Gao \textbf{[7]}, Guo \textbf{[6]}, Zheng \textbf{[9]}, Cao \textbf{[8]}};
+\node[font=\footnotesize, text=PlatCol!70!black, align=center,
+      text width=16cm, below=0.10cm of plat]
+  {Zheng et al.\ \textbf{[10]}};
+
+\end{tikzpicture}
+
+\vspace{0.12cm}
+
+%% ════════════════════════════════════════════════════════════
+%%  THREE COLUMNS
+%% ════════════════════════════════════════════════════════════
+\hspace{0.5cm}%
+\begin{tikzpicture}[remember picture, overlay]
+  \draw[GrayLine, dashed, line width=1.2pt]
+    (39.3cm, -49.0cm) -- (39.3cm, 0cm);
+  \draw[GrayLine, dashed, line width=1.2pt]
+    (78.6cm, -49.0cm) -- (78.6cm, 0cm);
+\end{tikzpicture}%
+\begin{columns}[T,totalwidth=\FW]
+
+%% ══════════════════════ COLUMN 1 ═════════════════════════════
+\begin{column}{\CW}
+
+%% ── Box A: Sensor Principles ─────────────────────────────────
+\begin{tcolorbox}[pbox=SensorCol,
+  title={Sensor Principles — Integrate-and-Fire Model\paper{1}\paper{4}}]
+\normalsize
+Spike cameras mimic the \textbf{retinal fovea}: each pixel accumulates photons
+and fires a binary spike when $A(x,t)\!\ge\!\varphi$, then resets.
+Polling at $\Delta t=25\,\mu\mathrm{s}$ yields \metric{40\,000 Hz} binary streams.
+
+\medskip
+\textbf{Dong et al.\ 2017\paper{1} — TFL \& TFP:}\\
+$\bullet$ \textbf{TFL (Texture from Latencies):} Reconstruct brightness inversely proportional to the time interval between successive spikes. Fails in extremely bright regions if spikes are faster than hardware clock.\\
+$\bullet$ \textbf{TFP (Texture from Playback):} Counts spikes inside a temporal window. Fails in dark regions unless windows are large, leading to motion blur.\\
+$\rightarrow$ Early foundations for modeling the light intensity formulation.
+
+\medskip
+\textbf{VidarOne chip\paper{4}:}\\
+$\bullet$ \metric{400$\times$250} resolution, \metric{$>$100\,dB} dynamic range, \metric{370\,mW} power.\\
+$\bullet$ Output rate: \metric{40\,kHz}. Unlike conventional cameras capturing average radiance continuously, each pixel in VidarOne makes asynchronous threshold-based decisions.
+\end{tcolorbox}
+
+\vspace{0.25cm}
+\begin{tcolorbox}[pbox=MidBlue,
+  title={Sensor Comparison: Frame / Event / Spike Cameras}]
+\normalsize
+\begin{center}
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.4}
+\begin{tabularx}{0.97\linewidth}{>{\bfseries\normalsize}l X X X}
+\toprule
+\rowcolor{MidBlue!12}
+Property & Frame & Event & \cellcolor{TealAccent!18}Spike \\
+\midrule
+Temporal res. & 30–240\,fps & $\sim$1\,MHz & \cellcolor{TealAccent!10}\textbf{40\,kHz}\\
+Motion blur & Severe & None & \cellcolor{TealAccent!10}None\\
+Scene texture & Full & Edges only & \cellcolor{TealAccent!10}Full\\
+HDR & Poor & Good & \cellcolor{TealAccent!10}$>$100\,dB\\
+\rowcolor{MidBlue!12}
+Pixel Output & ADC (Int) & Binary & \cellcolor{TealAccent!10}Binary stream\\
+Redundancy & High & Low & \cellcolor{TealAccent!10}High\\
+\bottomrule
+\end{tabularx}
+\end{center}
+\end{tcolorbox}
+
+\vspace{0.12cm}
+
+%% ── Box B: Standardized Datasets ─────────────────────────────
+\begin{tcolorbox}[pbox=TheoryCol,
+  title={Key Evaluation Datasets}]
+\normalsize
+To train and benchmark spike vision models, several synthetic and real datasets have been introduced:
+
+\medskip
+$\bullet$ \textbf{SPIFT \& PHM\paper{2}\paper{5}:} SPIFT (\emph{SPIkingly Flying Things}) features objects flying in random backgrounds (like FlyingChairs) for robust optical flow training. \textbf{PHM} (\emph{Photo-realistic Highspeed Motion}) offers well-designed scenes with high-speed camera motions and varying illuminations.\\
+$\bullet$ \textbf{DENSE-spike\paper{3}:} A synthetic weather-condition dataset containing RGB imagery, dense spike streams, and accurate ground-truth depth maps for monocular depth estimation (MDE).\\
+$\bullet$ \textbf{Outdoor-spike\paper{3}:} Real-world sequences captured on traffic roads and city streets directly via a hardware spiking camera to validate real-world scene generalization.
+\end{tcolorbox}
+
+\vspace{0.25cm}
+
+%% ── Box C: SpikeCV Platform ──────────────────────────────────
+\begin{tcolorbox}[pbox=ToolCol,
+  title={SpikeCV: Open Spike Vision Platform\paper{10}}]
+\normalsize
+\textbf{Zheng et al., 2026\paper{10}} — first open-source CV platform for spike cameras.
+
+\medskip
+$\bullet$ \texttt{SpikeStream}: unified API for offline \& live hardware\\
+$\bullet$ Standardized datasets: flow, depth, detection, tracking\\
+$\bullet$ Hardware: SpikeSEE cameras (megapixel color, 3rd gen)
+\end{tcolorbox}
+
+\end{column}
+
+%% ══════════════════════ COLUMN 2 ═════════════════════════════
+\begin{column}{\CW}
+
+%% ── Box D: Optical Flow ──────────────────────────────────────
+\begin{tcolorbox}[pbox=FlowCol,
+  title={Dense Prediction I — Optical Flow\paper{2}\paper{5}}]
+\normalsize
+
+\textbf{Challenge:} Spike density fluctuates (Poisson photon arrival) → noisy feature matching.
+
+\medskip
+\begin{minipage}[t]{0.48\linewidth}
+\textbf{SCFlow\paper{2}} (Hu, CVPR 2022)\\
+\emph{FATW}: adaptive temporal window.\\[2pt]
+$\bullet$ 0.80\,M params (RAFT: 5.40\,M)\\
+$\bullet$ SPIFT AEE: \metric{2.457}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.48\linewidth}
+\textbf{HiST-SFlow\paper{5}} (Zhao, AAAI 2024)\\
+Hierarchical spatial-temporal fusion.\\[2pt]
+$\bullet$ 20–30\% error reduction\\
+$\bullet$ PHM AEPE: \metric{0.305}
+\end{minipage}
+
+\smallskip
+\textcolor{gray}{\textbf{Insight:}} Conventional feature matching fails under random, fluctuating spike densities (Poisson photon arrival). HiST-SFlow resolves this by constructing dense representations across multiple spatial-temporal scales prior to cost volume calculation.
+
+\vspace{0.25cm}
+\begin{center}
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.88\linewidth, height=4.0cm,
+  ybar, bar width=11pt,
+  symbolic x coords={SCFlow [2],HiST-SFlow [5],RAFT,FlowFormer,CRAFT},
+  xtick=data,
+  x tick label style={font=\footnotesize, align=center, rotate=25, anchor=north east},
+  ymin=0, ymax=3.8,
+  enlarge x limits=0.18,
+  ylabel={\small AEPE (PHM) $\downarrow$},
+  ylabel style={font=\small},
+  yticklabel style={font=\scriptsize},
+  enlarge x limits=0.12,
+  grid=major, grid style={dashed,GrayLine!40},
+  axis background/.style={fill=SoftWhite},
+  nodes near coords,
+  nodes near coords style={font=\tiny,anchor=south},
+]
+\addplot[fill=TealAccent!80,draw=TealAccent!80!black]
+  coordinates {({SCFlow [2]},2.457)({HiST-SFlow [5]},0.305)
+               (RAFT,3.162)(FlowFormer,1.98)(CRAFT,2.10)};
+\end{axis}
+\end{tikzpicture}
+\end{center}
+\end{tcolorbox}
+
+\vspace{0.12cm}
+
+%% ── Box E: Depth Estimation ──────────────────────────────────
+\begin{tcolorbox}[pbox=DepthCol,
+  title={Dense Prediction II — Depth Estimation\paper{3}\paper{7}}]
+\normalsize
+
+\begin{minipage}[t]{0.48\linewidth}
+\textbf{Spike Transformer\paper{3}}\\
+(Zhang, ECCV 2022)\\
+\emph{First} monocular depth from spikes.\\[2pt]
+$\bullet$ DENSE-spike Abs Rel: \metric{0.606}\\
+$\bullet$ $\delta{<}1.25$: \metric{0.682}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.48\linewidth}
+\textbf{SpikeStereoNet\paper{7}}\\
+(Gao, 2026)\\
+\emph{First} stereo depth from spikes.\\[2pt]
+$\bullet$ RAFT-Stereo + Recurrent SNN\\
+$\bullet$ Robust with 10-50\% data
+\end{minipage}
+
+\smallskip
+\textcolor{gray}{\textbf{Insight:}} Spike Transformer provides the foundational architecture to effectively mine structural/spatial features directly from continuous, irregular binary streams without reconstructing images first. SpikeStereoNet extends this heavily into the stereo domain.
+
+\vspace{0.25cm}
+\begin{center}
+\begin{tikzpicture}
+\begin{axis}[
+  xbar, width=0.85\linewidth, height=3.8cm,
+  bar width=11pt,
+  symbolic y coords={E2Depth,U-Net,{Spike-T [3]}},
+  ytick=data,
+  yticklabel style={font=\small},
+  xmin=0, xmax=0.95,
+  xlabel={\small Abs Rel $\downarrow$},
+  xlabel style={font=\small},
+  xticklabel style={font=\scriptsize},
+  enlarge y limits=0.55,
+  grid=major, grid style={dashed,GrayLine!40},
+  axis background/.style={fill=SoftWhite},
+  nodes near coords, nodes near coords style={font=\tiny,anchor=west},
+]
+\addplot[fill=DepthCol!70,draw=DepthCol!80!black]
+  coordinates {(0.674,E2Depth)(0.815,U-Net)(0.606,{Spike-T [3]})};
+\end{axis}
+\end{tikzpicture}
+\end{center}
+\end{tcolorbox}
+
+\vspace{0.12cm}
+
+%% ── Box F: Adaptive Processing / SpikeSlicer ─────────────────
+\begin{tcolorbox}[pbox=AccentOrange,
+  title={Cross-Cutting — Adaptive Stream Processing\paper{8}}]
+\normalsize
+\textbf{SpikeSlicer\paper{8}} (Cao, NeurIPS 2024):
+SNN as adaptive event stream slicer.
+Fixed-length slicing causes information loss or redundancy;
+\emph{SPA-Loss} trains SNN to fire at optimal slice points.
+
+\medskip
+$\bullet$ \textbf{SPA-Loss Modulation:} Guides the SNN to spike and segment sequences effectively by regulating neuron membrane potentials based on semantic density.\\
+$\bullet$ \textbf{Feedback-Update Training:} Refines SNN slicing decisions dynamically using downstream Artificial Neural Network (ANN) accuracy loss feedback.\\
+$\bullet$ \textbf{Performance:} Tracking \metric{$+$11.9\%}, Recognition \metric{$+$19.2\%}, overhead \metric{$+$0.32\%}. Creates a novel low-energy SNN-ANN cooperative processing paradigm.
+\end{tcolorbox}
+
+\end{column}
+
+%% ══════════════════════ COLUMN 3 ═════════════════════════════
+\begin{column}{\CW}
+
+%% ── Box G: High-Speed Vision System ─────────────────────────
+\begin{tcolorbox}[pbox=HWCol,
+  title={High-Speed Vision System\paper{4}}]
+\normalsize
+\textbf{Huang, 2023\paper{4}} — end-to-end system on VidarOne chip.
+
+\medskip
+\begin{minipage}[t]{0.52\linewidth}
+\textbf{Pipeline:}\\
+$\bullet$ Scene reconstruction (TFW/TFI)\\
+$\bullet$ Detection (LIF neuron, STP filtering)\\
+$\bullet$ Tracking (CANN trajectory prediction)\\
+$\bullet$ Processing: \metric{20\,811\,Hz}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.44\linewidth}
+\textbf{Performance:}\\[2pt]
+\begin{tabular}{ll}
+\toprule
+MOTA & \metric{96.32\%} \\
+ID Switches & \metric{0} \\
+Power & 2.254\,W \\
+Max speed & 40\,m/s\\
+\bottomrule
+\end{tabular}
+\end{minipage}
+\end{tcolorbox}
+
+\vspace{0.12cm}
+
+%% ── Box H: Neural Scene Representation (NeRF) ────────────────
+\begin{tcolorbox}[pbox=ReprCol,
+  title={Neural Scene Representation — Spike-NeRF\paper{6}}]
+\normalsize
+\textbf{Guo, ICME 2024\paper{6}} — \emph{first} NeRF from spike streams.
+Standard NeRF fails on high-speed scenes (motion blur);
+spike cameras deliver sharp 40\,kHz data.
+
+\medskip
+\textbf{Innovations:} Spiking volume renderer, spike loss, spike masks. By deriving volumetric fields directly from the uncompressed $40\,\mathrm{kHz}$ binary stream, Spike-NeRF successfully bypasses the severe error accumulation common in conventional spike-to-image reconstruction chains.
+
+\vspace{0.25cm}
+\begin{center}
+\begin{tikzpicture}
+\begin{axis}[
+  xbar, width=0.85\linewidth, height=3.8cm,
+  bar width=11pt,
+  symbolic y coords={BAD-NeRF,{NeRF},{NeRF+Spk2Img},{Spike-NeRF [6]}},
+  ytick=data,
+  yticklabel style={font=\small},
+  xmin=15, xmax=35,
+  xlabel={\small PSNR $\uparrow$},
+  xlabel style={font=\small},
+  xticklabel style={font=\scriptsize},
+  enlarge y limits=0.45,
+  grid=major, grid style={dashed,GrayLine!40},
+  axis background/.style={fill=SoftWhite},
+  nodes near coords, nodes near coords style={font=\tiny,anchor=west},
+]
+\addplot[fill=ReprCol!70,draw=ReprCol!80!black]
+  coordinates {(22.2,BAD-NeRF)(22.8,{NeRF})(29.4,{NeRF+Spk2Img})(31.2,{Spike-NeRF [6]})};
+\end{axis}
+\end{tikzpicture}
+\end{center}
+\end{tcolorbox}
+
+\vspace{0.12cm}
+
+%% ── Box I: MOT / SNNTracker ──────────────────────────────────
+\begin{tcolorbox}[pbox=TrackCol,
+  title={High-Level Vision — Multi-Object Tracking\paper{9}}]
+\normalsize
+\textbf{SNNTracker\paper{9}} (Zheng, TPAMI 2026) — \emph{first fully-SNN} MOT for spike cameras.
+
+\medskip
+\begin{minipage}[t]{0.54\linewidth}
+\textbf{Architecture Components:}\\
+$\bullet$ \textbf{Adaptation \& Motion Estimation:} Encodes spatio-temporal dynamics directly without frames.\\
+$\bullet$ \textbf{Attention-based Saccade:} Uses Dynamic Neural Fields (DNF) for low-latency target detection.\\
+$\bullet$ \textbf{WTA + STDP Tracking:} Real-time online learning via Winner-Takes-All mechanisms, achieving state-of-the-art accuracy with \emph{zero labeled data}.
+\end{minipage}\hfill
+\begin{minipage}[t]{0.42\linewidth}
+\textbf{Results:}\\[2pt]
+\begin{tabular}{ll}
+\toprule
+MOTA (many) & \metric{$>$96\%} \\
+MOTA (best) & \metric{100\%} \\
+Latency & Minimal \\
+Max speed & 2600\,RPM \\
+\bottomrule
+\end{tabular}
+\end{minipage}
+
+\smallskip
+\textcolor{gray}{\textbf{Impact:}} Overcomes traditional tracker failures on fast target rotations or abrupt occlusions by continuously updating trajectory confidence maps inside an SNN framework.
+\end{tcolorbox}
+
+\vspace{0.12cm}
+
+%% ── Box J: Future Directions ─────────────────────────────────
+\begin{tcolorbox}[pbox=NavyBlue,
+  title={Open Problems and Future Directions}]
+\normalsize
+$\bullet$ \textbf{Real-world 3D benchmarks:} Spike-NeRF\paper{6} and SpikeStereoNet\paper{7} need real datasets with accurate depth/pose.
+
+\medskip
+$\bullet$ \textbf{End-to-end SNN stacks:} No paper yet combines adaptive slicing, dense prediction, and tracking in one SNN.
+
+\medskip
+$\bullet$ \textbf{Megapixel \& color:} SpikeCV\paper{10} documents color megapixel hardware, but all algorithms assume grayscale low-res input.
+
+\medskip
+$\bullet$ \textbf{SNN-ANN Synergy Paradigms:} Leveraging SNNs strictly as high-speed front-end processors (e.g. SpikeSlicer) for powerful downstream ANNs provides an extremely viable energy-efficient workflow.
+\end{tcolorbox}
+
+\end{column}
+\end{columns}
+
+%% ════════════════════════════════════════════════════════════
+%%  REFERENCES BAND
+%% ════════════════════════════════════════════════════════════
+\begin{tikzpicture}[remember picture, overlay]
+  \node[anchor=south west, inner sep=0pt, xshift=0.5cm, yshift=0.5cm] at (current page.south west) {
+    \begin{minipage}{\FW}
+      \begin{tcolorbox}[refbox]
+\scriptsize\setlength{\parskip}{0pt}\setlength{\parindent}{0pt}
+\tolerance=10000\emergencystretch=20pt\sloppy\raggedright
+\begin{multicols}{2}
+\textbf{[1]} S.\ Dong, T.\ Huang, Y.\ Tian. \textit{Spike Camera and Its Coding Methods.} DCC, 2017.\quad
+\textbf{[2]} L.\ Hu et al. \textit{Optical Flow Estimation for Spiking Camera (SCFlow).} CVPR, 2022.\quad
+\textbf{[3]} J.\ Zhang et al. \textit{Spike Transformer: Monocular Depth Estimation.} ECCV, 2022.\quad
+\textbf{[4]} T.\ Huang et al. \textit{1000$\times$ Faster Camera and Machine Vision with Ordinary Devices.} Engineering, 2023.\quad
+\textbf{[5]} R.\ Zhao et al. \textit{HiST-SFlow: Optical Flow via Hierarchical Spike Fusion.} AAAI, 2024.\quad
+\textbf{[6]} Y.\ Guo et al. \textit{Spike-NeRF: NeRF Based On Spike Camera.} ICME, 2024.\quad
+\textbf{[7]} Z.\ Gao et al. \textit{SpikeStereoNet: Stereo Depth from Spike Streams.} arXiv:\allowbreak2505.19487, 2026.\quad
+\textbf{[8]} J.\ Cao et al. \textit{SpikeSlicer: SNN as Adaptive Event Stream Slicer.} NeurIPS, 2024.\quad
+\textbf{[9]} Y.\ Zheng et al. \textit{SNNTracker: High-Speed MOT With Spike Camera.} TPAMI~48(1), 2026.\quad
+\textbf{[10]} Y.\ Zheng et al. \textit{SpikeCV: Open Continuous Computer Vision Era.} Sci.\ China, 2026.
+\end{multicols}
+\end{tcolorbox}
+    \end{minipage}
+  };
+\end{tikzpicture}
+
+\end{frame}
+
+%% ════════════════════════════════════════════════════════════
+%%  APPENDIX 1
+%% ════════════════════════════════════════════════════════════
+\begin{frame}[t]{Appendix 1: Full References}
+
+\begin{tikzpicture}[remember picture, overlay]
+  \fill[NavyBlue] (0cm,-8.2cm) rectangle (120cm,0cm);
+  \node[anchor=center,text=white,font=\bfseries\fontsize{46}{52}\selectfont]
+    at (60cm,-4.1cm) {Appendix 1: Full References};
+\end{tikzpicture}
+
+\vspace{10cm}
+\begin{center}
+\begin{minipage}{0.85\linewidth}
+\Large
+\setlength{\itemsep}{1.2cm}
+\begin{itemize}
+\item[\hypertarget{ref:1}{\textbf{[1]}}] Dong, Siwei, Tiejun Huang, and Yonghong Tian. “Spike Camera and Its Coding Methods.” \textit{2017 Data Compression Conference (DCC)}, April 2017, 437–437. https://doi.org/10.1109/DCC.2017.69.
+\item[\hypertarget{ref:2}{\textbf{[2]}}] Hu, Liwen, Rui Zhao, Ziluo Ding, et al. “Optical Flow Estimation for Spiking Camera.” \textit{2022 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)}, June 2022, 17823–32. https://doi.org/10.1109/CVPR52688.2022.01732.
+\item[\hypertarget{ref:3}{\textbf{[3]}}] Zhang, Jiyuan, Lulu Tang, Zhaofei Yu, Jiwen Lu, and Tiejun Huang. “Spike Transformer: Monocular Depth Estimation for Spiking Camera.” In \textit{Computer Vision – ECCV 2022}, vol. 13667, edited by Shai Avidan, Gabriel Brostow, Moustapha Cissé, Giovanni Maria Farinella, and Tal Hassner. Lecture Notes in Computer Science. Springer Nature Switzerland, 2022. https://doi.org/10.1007/978-3-031-20071-7\_3.
+\item[\hypertarget{ref:4}{\textbf{[4]}}] Huang Tiejun, Zheng Yajing, Yu Zhaofei, et al. “1000× Faster Camera and Machine Vision with Ordinary Devices.” \textit{Engineering 25 (June 2023)}: 110–19. https://doi.org/10.1016/j.eng.2022.01.012.
+\item[\hypertarget{ref:5}{\textbf{[5]}}] Zhao, Rui, Ruiqin Xiong, Jian Zhang, Xinfeng Zhang, Zhaofei Yu, and Tiejun Huang. “Optical Flow for Spike Camera with Hierarchical Spatial-Temporal Spike Fusion.” \textit{Proceedings of the AAAI Conference on Artificial Intelligence} 38, no. 7 (2024): 7496–504. https://doi.org/10.1609/aaai.v38i7.28581.
+\item[\hypertarget{ref:6}{\textbf{[6]}}] Guo, Yijia, Yuanxi Bai, Liwen Hu, et al. “Spike-NeRF: Neural Radiance Field Based On Spike Camera.” arXiv:2403.16410. Preprint, arXiv, March 25, 2024. https://doi.org/10.48550/arXiv.2403.16410.
+\item[\hypertarget{ref:7}{\textbf{[7]}}] Gao, Zhuoheng, Yihao Li, Jiyao Zhang, et al. “SpikeStereoNet: A Brain-Inspired Framework for Stereo Depth Estimation from Spike Streams.” arXiv:2505.19487. Preprint, arXiv, April 4, 2026. https://doi.org/10.48550/arXiv.2505.19487.
+\item[\hypertarget{ref:8}{\textbf{[8]}}] Cao, Jiahang, Mingyuan Sun, Ziqing Wang, et al. “Spiking Neural Network as Adaptive Event Stream Slicer.” arXiv:2410.02249. Preprint, arXiv, March 24, 2025. https://doi.org/10.48550/arXiv.2410.02249.
+\item[\hypertarget{ref:9}{\textbf{[9]}}] Zheng, Yajing, Chengen Li, Jiyuan Zhang, Zhaofei Yu, and Tiejun Huang. “SNNTracker: Online High-Speed Multi-Object Tracking With Spike Camera.” \textit{IEEE Transactions on Pattern Analysis and Machine Intelligence} 48, no. 1 (2026): 624–38. https://doi.org/10.1109/TPAMI.2025.3610696.
+\item[\hypertarget{ref:10}{\textbf{[10]}}] Zheng, Yajing, Jiyuan Zhang, Rui Zhao, et al. “SpikeCV: Open a Continuous Computer Vision Era.” \textit{Science China Information Sciences} 69, no. 3 (2026): 132106. https://doi.org/10.1007/s11432-023-4565-6.
+\end{itemize}
+\end{minipage}
+\end{center}
+
+\end{frame}
+
+%% ════════════════════════════════════════════════════════════
+%%  APPENDIX 2
+%% ════════════════════════════════════════════════════════════
+\begin{frame}[t]{Appendix 2: AI Usage}
+
+\begin{tikzpicture}[remember picture, overlay]
+  \fill[NavyBlue] (0cm,-8.2cm) rectangle (120cm,0cm);
+  \node[anchor=center,text=white,font=\bfseries\fontsize{46}{52}\selectfont]
+    at (60cm,-4.1cm) {Appendix 2: AI Usage};
+\end{tikzpicture}
+
+\vspace{10cm}
+\begin{center}
+  \begin{minipage}{0.85\linewidth}
+    \Large
+    \setlength{\itemsep}{1.2cm}
+    \begin{itemize}
+      \item Tried $\left(\text{overall thought}\to \underline{\text{DeepSeek V4}} \to \text{detailed poster description}\to \underline{\text{GPT Image 2}}\to\text{poster}\right)$. (It was not available to upload 10 files to GPT Image 2 without Pro membership.)
+      \item But it was vague and hard to adjust.
+      \item Tried $\left(\text{overall thought}\to\underline{\text{Claude Code}}\to\text{poster tex}\right)$.
+      \item It worked well despite some annoying display bug (esp. asymmetrical margin, undersized fonts).
+      \item Fixed and refined with $\underline{\text{Gemini 3.1 Pro}}$ from Copilot.
+      \item Updated reference items manually.
+      \item Finally checked (given 10 papers and full tex file) by $\underline{\text{DeepSeek V4}}$.
+    \end{itemize}
+  \end{minipage}
+\end{center}
+
+\end{frame}
+
+\end{document}
