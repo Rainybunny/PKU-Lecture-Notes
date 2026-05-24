@@ -203,7 +203,11 @@ Hint Unfold stuck : core.
 Example some_term_is_stuck :
   exists t, stuck t.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  exists <{succ tru}>.
+  unfold stuck. unfold step_normal_form. unfold not.
+  split; intros; invert H; invert H0; invert H1.
+Qed.
+
 (** [] *)
 
 (** However, although values and normal forms are _not_ the same in this
@@ -216,7 +220,22 @@ Proof.
 Lemma value_is_nf : forall t,
   value t -> step_normal_form t.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  unfold step_normal_form. unfold not.
+  intros.
+  invert H; invert H0.
+  - invert H; invert H1.
+  - generalize dependent x.
+    induction t; intros; invert H1; invert H.
+    apply IHt with t1'; assumption.
+Qed.
+
+Lemma value_elm : forall t t', value t -> t --> t' -> False.
+Proof.
+  intros.
+  apply value_is_nf with t.
+  - apply H.
+  - eexists. apply H0.
+Qed.
 
 (** (Hint: You will reach a point in this proof where you need to
     use an induction to reason about a term that is known to be a
@@ -236,7 +255,10 @@ Proof.
 Theorem step_deterministic:
   deterministic step.
 Proof with eauto.
-  (* FILL IN HERE *) Admitted.
+  unfold deterministic.
+  intros. generalize dependent y2.
+  induction H; intros; invert H0; auto.
+Admitted.
 (** [] *)
 
 (* ================================================================= *)
@@ -353,7 +375,10 @@ Example succ_hastype_nat__hastype_nat : forall t,
   <{ |--  succ t \in Nat }> ->
   <{ |-- t \in Nat }>.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  invert H. apply H1.
+Qed.
+
 (** [] *)
 
 (* ----------------------------------------------------------------- *)
@@ -414,7 +439,17 @@ Proof.
     + (* t1 can take a step *)
       destruct H as [t1' H1].
       exists <{ if t1' then t2 else t3 }>. auto.
-  (* FILL IN HERE *) Admitted.
+  - destruct IHHT.
+    + left. right. apply nv_succ. apply nat_canonical; assumption.
+    + right. invert H. exists <{ succ x }>. apply ST_Succ. apply H0.
+  - destruct IHHT; right.
+    + destruct (nat_canonical t1 HT); eauto.
+    + invert H. exists <{ pred x }>. auto.
+  - destruct IHHT.
+    + destruct (nat_canonical t1 HT); eauto.
+    + right. invert H. exists <{ iszero x }>. auto.
+Qed.
+
 (** [] *)
 
 (** **** Exercise: 3 stars, advanced, optional (finish_progress_informal)
@@ -482,7 +517,15 @@ Proof.
       + (* ST_IfFalse *) assumption.
       + (* ST_If *) apply T_If; try assumption.
         apply IHHT1; assumption.
-    (* FILL IN HERE *) Admitted.
+    - invert HE. apply T_Succ. auto.
+    - invert HE.
+      + apply T_0.
+      + invert HT. apply H1.
+      + apply T_Pred. apply IHHT; assumption.
+    - invert HE; try constructor.
+      apply IHHT. apply H0.
+Qed.
+
 (** [] *)
 
 (** **** Exercise: 3 stars, advanced, optional (finish_preservation_informal)
@@ -533,7 +576,15 @@ Theorem preservation' : forall t t' T,
   t --> t' ->
   <{ |-- t' \in T }>.
 Proof with eauto.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  generalize dependent t'.
+  generalize dependent T.
+  induction t; intros;
+  try solve_by_invert;
+  try (invert H0; invert H; auto).
+  invert H1. apply H0.
+Qed.
+
 (** [] *)
 
 (** The preservation theorem is often called _subject reduction_,
@@ -582,7 +633,14 @@ Theorem subject_expansion:
   \/
   ~ (forall t t' T, t --> t' /\ <{ |-- t' \in T }> -> <{ |-- t \in T }>).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  right.
+  unfold not. intros.
+  specialize H with <{ if true then tru else 0 }> <{ tru }> Bool.
+  assert <{ |-- if true then true else 0 \in Bool }>
+    by (apply H; split; constructor).
+  invert H0. invert H7.
+Qed.
+
 (** [] *)
 
 (** **** Exercise: 2 stars, standard (variation1)
@@ -598,11 +656,12 @@ Proof.
    else "becomes false." If a property becomes false, give a
    counterexample.
       - Determinism of [step]
-            (* FILL IN HERE *)
+            remains true
       - Progress
-            (* FILL IN HERE *)
+            becomes false.
+            <{ succ tru }>
       - Preservation
-            (* FILL IN HERE *)
+            remains true
 *)
 (* Do not modify the following line: *)
 Definition manual_grade_for_variation1 : option (nat*string) := None.
@@ -617,7 +676,13 @@ Definition manual_grade_for_variation1 : option (nat*string) := None.
 
    Which of the above properties become false in the presence of
    this rule?  For each one that does, give a counter-example.
-            (* FILL IN HERE *)
+      - Determinism of [step]
+            becomes false.
+            <{ if true then 0 else 1 }>
+      - Progress
+            remains true
+      - Preservation
+            remains true
 *)
 (* Do not modify the following line: *)
 Definition manual_grade_for_variation2 : option (nat*string) := None.
@@ -633,7 +698,13 @@ Definition manual_grade_for_variation2 : option (nat*string) := None.
 
    Which of the above properties become false in the presence of
    this rule?  For each one that does, give a counter-example.
-            (* FILL IN HERE *)
+      - Determinism of [step]
+            becomes false.
+            <{ if iszero 0 then iszero 1 else iszero 0 }>
+      - Progress
+            remains true
+      - Preservation
+            remains true
 *)
 (** [] *)
 
@@ -695,7 +766,7 @@ Definition manual_grade_for_variation2 : option (nat*string) := None.
     achieve this simply by removing the rule from the definition of
     [step]?  Would doing so create any problems elsewhere?
 
-(* FILL IN HERE *)
+  It will break the progress property (e.g. <{ pred 0 }>)
 *)
 (* Do not modify the following line: *)
 Definition manual_grade_for_remove_pred0  : option (nat*string) := None.
