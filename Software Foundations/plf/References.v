@@ -1079,7 +1079,14 @@ Theorem cyclic_store:
     t / nil -->*
     <{ unit }> / (<{ \x:Nat, (!(loc 1)) x }> :: <{ \x:Nat, (!(loc 0)) x }> :: nil).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  exists <{
+    (ref (\x:Nat, (!(loc 1)) x))
+    (ref (\x:Nat, (!(loc 0) x)))
+  }>.
+  eapply multi_step.
+  - apply ST_RefValue. constructor.
+  - 
+
 (** [] *)
 
 (** These problems arise from the fact that our proposed

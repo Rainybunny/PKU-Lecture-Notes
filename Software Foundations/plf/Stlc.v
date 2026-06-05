@@ -512,18 +512,80 @@ where "'[' x ':=' s ']' t" := (subst x s t) (in custom stlc_tm).
     constructors and prove that the relation you've defined coincides
     with the function given above. *)
 
+  (* | tm_var   : string -> tm
+  | tm_app   : tm -> tm -> tm
+  | tm_abs   : string -> ty -> tm -> tm
+  | tm_true  : tm
+  | tm_false : tm
+  | tm_if    : tm -> tm -> tm -> tm. *)
+
 Inductive substi (s : tm) (x : string) : tm -> tm -> Prop :=
   | s_var1 :
       substi s x (tm_var x) s
-  (* FILL IN HERE *)
+  | s_var2 : forall y,
+      String.eqb x y = false ->
+      substi s x (tm_var y) (tm_var y)
+  | s_abs1 : forall T t,
+      substi s x <{\x:T, t}> <{\x:T, t}>
+  | s_abs2 : forall T t t' y,
+      String.eqb x y = false ->
+      substi s x t t' ->
+      substi s x <{\y:T, t}> <{\y:T, t'}>
+  | s_app : forall t1 t1' t2 t2',
+      substi s x t1 t1' -> substi s x t2 t2' ->
+      substi s x <{ t1 t2 }> <{ t1' t2' }>
+  | s_true :
+      substi s x <{ true }> <{ true }>
+  | s_false :
+      substi s x <{ false }> <{ false }>
+  | s_if : forall t1 t1' t2 t2' t3 t3',
+      substi s x t1 t1' -> substi s x t2 t2' -> substi s x t3 t3' ->
+      substi s x <{ if t1 then t2 else t3 }> <{ if t1' then t2' else t3' }>
 .
 
 Hint Constructors substi : core.
 
+Lemma eqbeq : forall x y, String.eqb x y = true -> x = y.
+Proof. apply String.eqb_eq. Qed.
+
+Lemma substi_correct_l : forall s x t t',
+  <{ [x:=s]t }> = t' -> substi s x t t'.
+Proof.
+  intros s x t.
+  induction t; intros.
+  - destruct (String.eqb x s0) eqn:E;
+    unfold subst in H; rewrite E in H.
+    + rewrite (eqbeq _ _ E). rewrite H. auto.
+    + rewrite <- H. auto.
+  - rewrite <- H. apply s_app.
+    + apply IHt1. reflexivity.
+    + apply IHt2. reflexivity.
+  - destruct (String.eqb x s0) eqn:E;
+    unfold subst in H; rewrite E in H; rewrite <- H.
+    + rewrite (eqbeq _ _ E). apply s_abs1.
+    + apply s_abs2; auto.
+  - rewrite <- H. apply s_true.
+  - rewrite <- H. apply s_false.
+  - rewrite <- H. apply s_if; auto.
+Qed.
+
+Lemma substi_correct_r : forall s x t t',
+  substi s x t t' -> <{ [x:=s] t }> = t'.
+Proof.
+  intros.
+  induction H; simpl;
+  repeat rewrite String.eqb_refl;
+  try rewrite H; try (subst; reflexivity).
+Qed.
+
 Theorem substi_correct : forall s x t t',
   <{ [x:=s]t }> = t' <-> substi s x t t'.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  split.
+  - apply substi_correct_l.
+  - apply substi_correct_r.
+Qed.
+
 (** [] *)
 
 (* ================================================================= *)
@@ -724,13 +786,18 @@ Lemma step_example5 :
        <{idBBBB idBB idB}>
   -->* idB.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  eapply multi_step.
+  - apply ST_App1. apply ST_AppAbs. apply v_abs.
+  - eapply multi_step.
+    + apply ST_AppAbs. apply v_abs.
+    + apply multi_refl.
+Qed.
 
 Lemma step_example5_with_normalize :
        <{idBBBB idBB idB}>
   -->* idB.
-Proof.
-  (* FILL IN HERE *) Admitted.
+Proof. normalize. Qed.
+
 (** [] *)
 
 (* ################################################################# *)
@@ -894,7 +961,12 @@ Example typing_example_2_full :
           (y (y x)) \in
     Bool -> (Bool -> Bool) -> Bool }>.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  repeat apply T_Abs.
+  repeat apply T_App with Ty_Bool;
+  apply T_Var; unfold update; unfold t_update;
+  rewrite String.eqb_refl; reflexivity.
+Qed.
+
 (** [] *)
 
 (** **** Exercise: 2 stars, standard (typing_example_3)
@@ -916,7 +988,13 @@ Example typing_example_3 :
                (y (x z)) \in
       T }>.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  exists <{{ (Bool -> Bool) -> (Bool -> Bool) -> Bool -> Bool }}>.
+  repeat apply T_Abs.
+  repeat apply T_App with Ty_Bool;
+  apply T_Var; unfold update; unfold t_update;
+  rewrite String.eqb_refl; reflexivity.
+Qed.
+
 (** [] *)
 
 (** We can also show that some terms are _not_ typable.  For example,
@@ -958,7 +1036,16 @@ Example typing_nonexample_3 :
       <{ empty |--
           \x:S, x x \in T }>).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros Hc.
+  destruct Hc as [S [T H]].
+  invert H. invert H5. invert H2.
+  invert H1. invert H4. invert H1.
+  generalize dependent T1.
+  induction T2; intros.
+  - discriminate.
+  - invert H0. eapply IHT2_1. apply H1.
+Qed.
+
 (** [] *)
 
 End STLC.

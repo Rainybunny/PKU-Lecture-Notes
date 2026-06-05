@@ -146,7 +146,19 @@ Theorem progress' : forall t T,
 Proof.
   intros t.
   induction t; intros T Ht; auto.
-  (* FILL IN HERE *) Admitted.
+  - left. invert Ht. invert H1.
+  - invert Ht.
+    destruct (IHt2 _ H4); destruct (IHt1 _ H2); right.
+    + invert H0; invert H2. eexists.
+      apply ST_AppAbs. apply H.
+    + invert H0. eexists. apply ST_App1. apply H1.
+    + invert H. eexists. apply ST_App2; eauto.
+    + invert H0. eexists. apply ST_App1. apply H1.
+  - invert Ht. right. destruct (IHt1 _ H3).
+    + invert H3; invert H; eauto.
+    + invert H. eexists. apply ST_If. apply H0.
+Qed.
+
 (** [] *)
 
 (* ################################################################# *)
@@ -464,7 +476,18 @@ Theorem unique_types : forall Gamma e T T',
   <{ Gamma |-- e \in T' }> ->
   T = T'.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  generalize dependent T'.
+  induction H; intros.
+  - invert H0. rewrite H in H3. injection H3. auto.
+  - invert H0. rewrite (IHhas_type T0 H6). reflexivity.
+  - invert H1. remember (IHhas_type1 <{{ T3 -> T' }}> H5) as IH.
+    invert IH. reflexivity.
+  - invert H0. reflexivity.
+  - invert H0. reflexivity.
+  - invert H2. apply (IHhas_type2 T' H9).
+Qed.
+
 (** [] *)
 
 (* ################################################################# *)
