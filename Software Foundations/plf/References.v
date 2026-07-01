@@ -1083,9 +1083,10 @@ Proof.
     (ref (\x:Nat, (!(loc 1)) x))
     (ref (\x:Nat, (!(loc 0) x)))
   }>.
-  eapply multi_step.
+  (* eapply multi_step.
   - apply ST_RefValue. constructor.
-  - 
+  -  *)
+  Admitted.
 
 (** [] *)
 
